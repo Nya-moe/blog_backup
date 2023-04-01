@@ -1,0 +1,23 @@
+- class_name: 友情链接
+  class_desc: 欢迎互关喵～
+  link_list:
+    - name: Molyuu
+      link: https://blog.molyuu.xyz
+      avatar: /img/face-molyuu.jpg
+      descr: Molyuu的博客
+    - name: Kevin Williams
+      link: https://www.utermux.dev
+      avatar: /img/face-kevin_williams.jpg
+      descr: termux开发组成员
+    - name: SuInk
+      link: https://suink.cn
+      avatar: /img/face-suink.jpg
+      descr: 懒得要死的作者(貌似比我还勤快点)
+    - name: Trrrrw
+      link: https://www.trrw.tech
+      avatar: /img/face-Trrrrw.jpg
+      descr: 人与人的羁绊是真正的力量之源
+    - name: Moe-hacker
+      link: https://moe-hacker.github.io
+      avatar: /img/face.jpg
+      descr: 咱自己喵～
