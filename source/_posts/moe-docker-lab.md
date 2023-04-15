@@ -13,11 +13,11 @@ top_img: /img/docker-lab.jpg
 在这里，你将会学习如何为自己的手机开启docker支持，期待你的成果喵～
 文章会包含一些小技巧和docker基本异常处理，毕竟这只可爱的猫猫是不会向你隐瞒自己知道的东西的，真是一只傻的可爱的猫猫呢～
 文章内所述手机为arm64架构，上古时期的32位架构请自行修改。
-注：pixel系列设备如pixel3在测试时发现如果不用官方构建工具，生成vmlinux这一步会导致系统内存溢出，开多大swap都没用，只是崩溃/死机的时间问题，目前原因未知，故此教程不适用于pixel系列设备，pixel系列设备请换用repo工具。
+注：pixel系列设备请换用repo工具以及官方构建工具并使用ThinLTO（在内存小于32G的设备上）。
 好了让我们开始吧喵！
 ### 首要前提：
-- 手机能够获取root权限
-- 手机内核开源
+- 手机能够解锁bl并获取root权限
+- 手机内核开源，尽量是有大佬维护源码的
 - 拥有一定Linux基础
 
 如果设备或个人不满足以上条件者请自行退出喵！本猫猫是没时间给你解释为什么的。
@@ -48,15 +48,18 @@ cat /proc/version
 Linux version 4.19.260-Moe-hacker-g0bb1c026ee65-dirty (root@localhost) (Ubuntu clang version 14.0.6-2, GNU ld (GNU Binutils for Ubuntu) 2.39) #3 SMP PREEMPT Sun Oct 2 10:48:46 CST 2022
 ```
 当然猫猫已经完成内核编译了，仔细观察会发现内核由clang-14编译。
+对应llvm版本也为14。
 于是你确认了要用的编译器版本。
-如果是由谷歌的安卓开发工具构建，请自行查找并下载。
+如果内核是由谷歌的安卓开发工具构建，请自行查找并下载。
 小技巧：使用原系统内核使用的编译器版本可以降低出错概率。
-编译环境可以去搜一搜dockerhub啥的，毕竟电脑肯定会有docker支持。
-手机可以去找找llvm的release，注意用arm64架构的。
 #### 0x0005 源码获取：
 使用git clone项目仓库，如果是官方仓库需要加入-b选项克隆机型独立的分支。
+国内用户访问github不方便的可以换用ssh协议（git clone ssh@github.com:用户or组织名称/代码仓库）
+或者换用镜像站kgithub.com或ghproxy.com等。
 #### 0x0006 依赖安装：
 主要依赖有：clang/gcc构建工具,跨架构binutils工具(跨架构编译需要),make,python,libssl-dev,build-essential,bc,bison,flex,unzip,libssl-dev,ca-certificates,xz-utils,mkbootimg,cpio,device-tree-compiler，请自行安装，否则编译会出错。
+编译出现command not found大概率是工具没有安装。
+debian系的系统解决文件缺失推荐`apt-file search`命令。
 #### 0x0007 尝试编译：
 进入项目目录
 ```sh
@@ -67,6 +70,9 @@ ls arch/arm64/configs
 ```sh
 ls arch/arm64/configs/vendor
 ```
+桥豆麻袋，还是找不到啊！！！
+github去arch/arm64/configs目录下看看提交记录，最近变更最多的大概率是。比如nothing的三方内核源码配置文件是vendor/lahaina-qgki_defconfig。
+或者根据版本号，三方内核配置中CONFIG_LOCALVERSION值大概率不是默认。
 然后，呐，现在要开始编译了哦喵！
 ```sh
 export ARCH=arm64
@@ -79,15 +85,15 @@ make O=out CC=[clang/gcc-版本号] (vendor/)xxxxxx_defconfig ［可选参数］
 ARCH=arm64
 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 #本人基本没用到过，按需开启
-AR=llvm-ar
-OBJDUMP=llvm-objdump
-STRIP=llvm-strip
-NM=llvm-nm
-OBJCOPY=llvm-objcopy
-LD=ld.lld
+AR=llvm-ar-版本号
+OBJDUMP=llvm-objdump-版本号
+STRIP=llvm-strip-版本号
+NM=llvm-nm-版本号
+OBJCOPY=llvm-objcopy-版本号
+LD=ld.lld-版本号
 ```
-以上可选参数可用于报错处理，酌情加入。
-然后，其他参数不变，删掉(vendor/)xxxxxx_defconfig，改为-j8，开始构建内核。
+以上可选参数可用于报错处理以及确保llvm工具版本与clang一致，酌情加入。
+然后，其他参数不变，删掉(vendor/)xxxxxx_defconfig这个，改为-j$(nproc)，开始构建内核。
 #### 0x0008 基本异常处理：
 找不到头文件：
 安装相应库。
@@ -95,8 +101,9 @@ LD=ld.lld
 安装相应软件。
 -Werror,xxxxxxx：
 找报错的文件相应Makefile,把含有-werror的都删了(每一层目录都有，建议从报错文件那一层往父目录找)，或者make选项改为CC="[clang/gcc]-版本号 -w"
-未定义函数：
+未定义函数或其他未定义：
 查找函数定义开启所依赖的配置项一并开启，可能在头文件或kconfig/makefile中。
+最后一步生成vmlinux时报错大概率是因为配置没开全。
 #### 0x0009 玄学异常：
 在编译pixel3内核时，C语言零基础的猫猫删了一行源码成功生成内核，开机功能一切正常。
 在编译小米10Ultra内核时一行源码少了一个地址符&，手动添加后一切正常。
