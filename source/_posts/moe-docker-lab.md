@@ -141,6 +141,7 @@ zpoolcommand=y
 生成文件在out/arch/arm64/boot/目录下，大部分命名为Image.xxx-dtb，但是注意，少数机型只能刷入Image.xx格式镜像。
 #### 0x000C 验证config：
 scripts目录下有个extract-ikconfig，用它把Image的配置扫出来输出到一个文件，check-config.sh除上文所讲述的无法开启的配置全绿即可。
+如果遇到内核config和out/.config内容不一致，可以用out/.config覆盖arch/arm64/configs/defconfig和原defconfig文件后再次编译。
 #### 0x000D 刷入：
 下载刷入工具：
 ```sh
