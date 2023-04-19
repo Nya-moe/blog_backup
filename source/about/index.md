@@ -18,20 +18,6 @@ date: 2022-12-03 12:46:15
 ### 自我介绍：
 <div class="sj">自我介绍下，沨鸾又名Moe-hacker，年龄未知，大概三岁左右，性别纸片人，但是偏女，咕咕咕属性严重，日常失踪，作息未知，职业未知，说话习惯带点浓度，要素有时多点也是正常的。</div>
 <div class="sj">官方宠物猫猫：github@Hacker-moe，名字叫“萌系黑客会遇到物理panic吗”，其实是小号啦哈哈。</div>
-
-### 主要著作：
-- [termux-container](https://github.com/Moe-hacker/termux-container)
-(termux中的chroot-unshare/proot容器部署与管理脚本，新版本重构中)
-- [moe-container](https://github.com/Moe-hacker/moe-container)
-(带有namespace利用和capability控制的轻量型linux容器实现)
-- [linux-jvav](https://github.com/Moe-hacker/linux-jvav)
-(适用于linux的jvav语言shell和编译器，属于是夭折了，重构计划：下次一定)
-- 几部安卓机上支持docker特性的内核
-[Google pixel3/XL](https://github.com/Moe-hacker/kernel_google_bluecross_docker)  
-[Redmi 10X 5G](https://github.com/Moe-hacker/kernel-nethunter-docker-atom-redmi-mt6885)  
-[Xiaomi mi 10 Ultra](https://github.com/Moe-hacker/kernel_docker_xiaomi_SM8250_cas)  
-- 其它一些小东西
-
 最后，很高兴认识你，陌生人。
 
 -----------
