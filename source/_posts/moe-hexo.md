@@ -85,6 +85,7 @@ tag_img: /img/cover.jpg
 tag_per_img: /img/cover.jpg
 category_img: /img/cover.jpg
 category_per_img: /img/cover.jpg
+
 default_cover: /img/cover.jpg
 wordcount:
   enable: true

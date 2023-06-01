@@ -8,6 +8,7 @@ tags:
 cover: /img/container-lab.jpg
 top_img: /img/container-lab.jpg
 ---
+## 注意：此文章已过时，新的文章。。。先鸽着
 欢迎来到猫猫的C语言实验室喵！
 ## 序言：
 文中所述源码是以MIT协议开源的，本文转载请注明原创作者为Moe-hacker，除此之外无其他要求。
@@ -22,7 +23,7 @@ top_img: /img/container-lab.jpg
 程序完善，异常处理与架构设计在选修章节。
 本文容器目录为/data/alpine，作为最小测试系统。
 文章分必修和选修两个部分，选修部分技术要求可能较高，里面用到的函数未给出详细解说，请自行查看相关文档学习。
-成品展示：[Moe-hacker/moe-container](https://github.com/Moe-hacker/moe-container)
+成品展示：[Moe-hacker/ruri](https://github.com/Moe-hacker/ruri)
 ## 头文件：
 为了方便(其实是懒)，本文所有C语言代码将共享以下头文件：
 ```C
