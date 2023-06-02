@@ -48,6 +48,14 @@ ruri中默认关闭的检测项：
 --checks=*,-clang-analyzer-security.insecureAPI.strcpy,-altera-unroll-loops,-cert-err33-c,-concurrency-mt-unsafe,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-function-cognitive-complexity,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-no-recursion,-bugprone-easily-swappable-parameters,-readability-identifier-length,-cert-err34-c,-bugprone-assignment-in-if-condition
 ```
 目前ruri已经过了这些检测，但愿读者的内存永远不要泄漏喵～
+由于clang-tidy检测项太多，有些是对理解难度甚至是对todo风格等的检查，有些检查根本没法满足比如函数使用嵌套也会有警告，因此检查时需要我们手动对我们认为无效的警告进行过滤。      
+一些有用的警告：      
+数组越界      
+内存泄漏      
+未初始化的指针      
+free()后还在使用的内存或者使用后没被free()的内存      
+未初始化的变量      
+void函数最后的return      
 ### 使用ASAN查看内存问题：
 ASAN全称Address Sanitizer，是google发明的一种内存地址错误检查器，用于在运行时检测代码内存问题。
 如何使用：
@@ -70,12 +78,26 @@ Shadow bytes around the buggy address:
 ```
 貌似还.......挺好看......
 一般来讲出问题的行会在后面汇报。
-不过ASAN面对fork()后的程序貌似有点抽风，猫猫写的代码好不容易跑起来了，结果退出时卡在`sched_yield()`这个系统调用，但是猫猫的程序出口都在main()，子进程最终会执行exec()，所以怀疑是ASAN的问题，猫猫暂时也没能解决呜呜呜～
+注意：建议使用clang-tidy检查有bug的代码，因为一旦内存有问题的话很可能程序不会在出问题那行崩溃。
+ASAN面对fork()后的程序貌似有点抽风，猫猫写的代码好不容易跑起来了，结果退出时卡在`sched_yield()`这个系统调用，但是猫猫的程序出口都在main()，子进程最终会执行exec()，所以怀疑是ASAN的问题，猫猫暂时也没能解决呜呜呜～
 在有些教程中ASAN偶尔会配合addr2line使用，猫猫实测貌似也定位不到相关行，或许是猫猫太笨了喵～
 ### 使用GDB调试工具
-GDB全称The GNU Project Debugger，是GNU项目的一部分。
+GDB全称The GNU Project Debugger，是GNU项目的一部分。建议使用来检测代码是否实现而非内存问题，除非clang-tidy无法检测出来。
 在编译时加如参数`-ggdb`，不要开任何优化，然后就可以使用gdb来调试程序了。
 注意，代码里少写两个goto有助于调试，白皮书说C语言提供了可以随意滥用的goto语句，瞧瞧这说的，像话吗喵！！！
+注意，请先使用clang-tidy检查是否有leak of memory，否则你可能会遇上这种冥场面：
+```logs
+Breakpoint 2, check_container (
+container_dir=0x7ffffffdb0 "./t") at container.c:601
+601       if (strcmp(container_dir, "/") == 0)
+(gdb) c
+Continuing.
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000007ff4505a10 in __strlen_aarch64 ()
+from /apex/com.android.runtime/lib64/bionic/libc.so
+```
+猫猫甚至还在未初始化内存的结构体中读到过一个ELF，估计是指针指向程序头之类的地方了。
 基本命令：
 ```sh
 gdb ./可执行文件
