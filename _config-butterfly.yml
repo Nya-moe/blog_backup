@@ -648,7 +648,7 @@ hr_icon:
 subtitle:
   enable: true
   # Typewriter Effect (打字效果)
-  effect: false
+  effect: true
   # Effect Speed Options (打字效果速度參數)
   startDelay: 300 # time before typing starts in milliseconds
   typeSpeed: 150 # type speed in milliseconds
@@ -664,7 +664,7 @@ subtitle:
   source: false
   # 如果關閉打字效果，subtitle 只會顯示 sub 的第一行文字
   sub: 
-  - 你第一眼看到的是neko，还是ohm？
+  - "Premature optimization is the root of all evil."
 
 # Loading Animation (加載動畫)
 preloader:
