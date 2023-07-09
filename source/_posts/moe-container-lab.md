@@ -3,7 +3,7 @@ title: 从零开始实现一个Linux容器
 date: 2022-12-04 15:05:18
 tags:
   - Linux
-  - C
+  - C语言
   - container
 cover: /img/container-lab.jpg
 top_img: /img/container-lab.jpg
