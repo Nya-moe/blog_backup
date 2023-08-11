@@ -166,59 +166,6 @@ done
 桜のような恋でした-[鹿乃].mp3
 ```
 个人感觉好看多了。
-### 用Shell写代码：
-(怕是人家shell自己写的代码都比你规范)
-moe-container里有这样一段头文件：
-```C
-#define DROP_CAP_SYS_ADMIN 1
-#define DROP_CAP_SYS_MODULE 1
-#define DROP_CAP_SYS_RAWIO 1
-#define DROP_CAP_SYS_PACCT 1
-#define DROP_CAP_SYS_NICE 1
-#define DROP_CAP_SYS_RESOURCE 1
-#define DROP_CAP_SYS_TTY_CONFIG 1
-………………
-```
-可以看到#define DROP_和后面的1都是重复的
-于是我们可以单独写一个caplist文件来记录那些不同的部分：
-```
-CAP_SYS_ADMIN
-CAP_SYS_MODULE
-CAP_SYS_RAWIO
-CAP_SYS_PACCT
-CAP_SYS_NICE
-CAP_SYS_RESOURCE
-CAP_SYS_TTY_CONFIG
-```
-然后：
-```sh
-cat caplist|while read cap
-do
-echo "#define DROP_${cap} 1"
-done
-```
-事实上这一段：
-```C
-    if(DROP_CAP_SYS_ADMIN == 1){
-      cap_drop_bound(CAP_SYS_ADMIN);
-    }
-    if(DROP_CAP_SYS_MODULE == 1){
-      cap_drop_bound(CAP_SYS_MODULE);
-    }
-    if(DROP_CAP_SYS_RAWIO == 1){
-      cap_drop_bound(CAP_SYS_RAWIO);
-    }
-………………
-```
-是这么生成的：
-```sh
-cat caplist|while read cap
-do
-echo "    if(DROP_$cap==1){\n      cap_drop_bound($cap);\n    }"
-done
-```
-非常规范，非常工整。
-C语言实现了shell，shell可以生成简单重复的C语言代码，双向奔赴，非常美好。
 ### 萌新代码生成：
 ```sh
 x(){
@@ -237,7 +184,7 @@ x > 1.py
 ### 变量当函数/命令名执行：
 ```sh
 test(){
-  $1
+  $@
 }
 test ls
 ```
