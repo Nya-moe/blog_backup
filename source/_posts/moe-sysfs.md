@@ -22,7 +22,7 @@ brightness的内容是个无符号整形数值，定义了灯的亮度，向其�
 #### nothing phone 1的灯带：
 算是个特大号呼吸灯？
 它被注册到了/sys/class/leds/aw210xx_led下
-*_br和video_leds_effect文件是控制灯的，其他文件还没研究也没太大必要研究。
+*_br和video_leds_effect文件是控制灯的，single_led_br控制单个区域，其他文件还没研究也没太大必要研究。
 首先有个文件max_brightness显然是定义亮度的最大值。
 至于*_br可以写个脚本看看到底是干嘛的：
 ```sh
@@ -42,6 +42,10 @@ echo 1 > /sys/class/leds/aw210xx_led/video_leds_effect
 #关闭
 echo 0 > /sys/class/leds/aw210xx_led/video_leds_effect
 ```
+至于single_led_br：      
+写入序号+空格+亮度可以点亮单个小区域。      
+比如充电指示灯区域的代号为：      
+"16", "13", "11", "9", "12", "10", "14", "15", "8"      
 （文章不够私货凑）
 ### 马达：
 这东西的代码就更加碎片化了。

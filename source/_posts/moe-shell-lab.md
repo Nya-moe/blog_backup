@@ -8,7 +8,6 @@ tags:
 top_img: /img/cover.jpg
 cover: /img/cover.jpg
 ---
-欢迎来到猫猫的Shell实验室喵！
 跟着沨鸾学shell，学到最后只会喵喵喵。 
 文章非入门教程，不要妄想本猫亲自教你基础知识，哼！ 
 生草部分也会包含有一些花式操作。
