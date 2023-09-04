@@ -4,7 +4,7 @@ date: 2023-06-01 16:21:47
 cover: /img/c-lab.jpg
 top_img: /img/c-lab.jpg
 tags:
-  - Linux
+  - 
   - C语言
 ---
 最近在开发ruri时遇到不少问题，猫猫也是第一次写C，早知道头顶这么发凉就去用某邪教了呜喵～      

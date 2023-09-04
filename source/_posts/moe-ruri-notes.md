@@ -1,5 +1,5 @@
 ---
-title: Re：从零开始的Linux容器——ruri开发笔记
+title: Re：从零开始的容器安全——ruri开发笔记
 date: 2023-07-31 10:14:26
 cover: /img/container-lab.jpg
 top_img: /img/container-lab.jpg
@@ -8,7 +8,7 @@ tags:
 - C语言
 - Container
 ---
-# Ruri计划加入seccomp支持，此文章又有理由咕咕咕了
+# 打好草稿了，快写完这篇了。。。。
 # 0x00 前言：
 ruri(原名moe-container)终于快写完了，之前一直咕咕咕着的开发笔记差不多也该写写了喵～        
 头图是项目最早的版本，真是怀念呢喵，那时候猫猫连数组都不会用，现在ruri代码都突破2k行了。      
@@ -190,3 +190,5 @@ pid_t init_unshare_container(bool no_warnings)
   return unshare_pid;
 }
 ```
+
+# 咕咕咕。。。。
