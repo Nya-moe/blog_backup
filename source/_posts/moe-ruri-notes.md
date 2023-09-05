@@ -8,21 +8,22 @@ tags:
 - C语言
 - Container
 ---
-# 打好草稿了，快写完这篇了。。。。
-# 0x00 前言：
-ruri(原名moe-container)终于快写完了，之前一直咕咕咕着的开发笔记差不多也该写写了喵～        
-头图是项目最早的版本，真是怀念呢喵，那时候猫猫连数组都不会用，现在ruri代码都突破2k行了。      
-虽说这个项目大概率不是啥特别有用的轮子，不过猫猫还是很感谢这个项目的，毕竟写之前猫猫的C语言水平还停留在helloworld水平的说。通过这个项目猫猫逐渐学会了规范化自己的代码，注释也从母语改为了英语。写代码时总会有一种“要学的东西还多着呢”，“还有我能做到的事哦”的感觉呢。     
-# 0x01 关于C语言：
-说实话虽然个人很喜欢C语言，但是并不太建议新手用C。      
-C语言唯一的好处就是能直接查man手册，毕竟是*nix正统语言。      
+# 前言：
+ruri刚发了rc1，之前一直咕咕咕着的开发笔记差不多也该写写了喵～        
+笔记主要讲容器及安全原理，附带一点C语言。      
+头图是项目最早的版本，真是怀念呢喵，那时候咱连数组都不会用，现在ruri代码都突破3k行了。      
+文章尚在完善中，不过基本内容已经写完了。      
+## 关于使用C语言：
+说实话虽然个人很喜欢C语言，但是并不太建议新手用C，go/rust相比起来学习成本以及易用性相较于C均有很大提升。      
+C语言唯一的好处就是能直接查man手册，毕竟是Linux正统语言。      
 使用C语言，您可能除了学习C之外，还需要掌握如下工具：
 - clang-tidy静态检测工具
 - clang-format格式化工具
 - GDB调试工具
 - ASAN内存检测工具 
-- GNUMake用于配置项目构建过程      
-至于学习C语言的心得嘛，猫猫仿照「病名は愛だった」写了一段：      
+- GNUMake用于配置项目构建过程   
+   
+至于学习C语言的心得嘛，        
 ```
 陷入无法察觉的overflow
 沦落于oom-killer之下的死尸
@@ -35,17 +36,29 @@ C语言唯一的好处就是能直接查man手册，毕竟是*nix正统语言。
 「bug还在↗↘↗↘↗↘↗➔➔↘↘」       
 ```
 ~~（高速退学）~~
-# 0x02 容器基本原理：
+# 容器基本原理：
+## Linux挂载点/设备文件：
+众嗦粥汁，Linux下的/proc，/sys与/dev均在开机时由init或其子服务创建，部分系统同时会将/tmp挂载为tmpfs，它们都需要被手动挂载到容器才可保证容器中程序正常运行。     
+其中，/proc为procfs，/sys为sysfs，/dev为tmpfs。      
+你还需要在容器中创建/dev下的设备节点文件。部分文章(怕是全部)在创建chroot/unshare容器时都会直接映射宿主机的/dev目录，这是十分危险的，正确的做法是参照docker容器默认创建的设备文件列表去手动创建这些节点。      
+当然了，docker也会将/sys下部分目录挂载为只读，详情可以去看ruri源码或者运行个docker容器看看它的挂载点。      
+## 容器注意事项：   
+Android的/data默认为nosuid挂载，/sdcard甚至是noexec，所以在安卓/data下创建容器时请将/data重挂载为suid，不要在/sdcard创建容器。      
+Archlinux的根目录需要在挂载点上，也就是说需要将容器目录自身bind-mount到自身，否则pacman无法运行。      
+/proc/mounts到/etc/mtab的链接可能需要手动创建。     
+大部分rootfs的resolv.conf为空需手动创建，安卓系统内容器联网需手动设置，授予需要联网的网络用户组(aid_inet,aid_net_raw)权限。      
 ## chroot(2):
-来自unistd.h，原型为
+chroot可是个老家伙了，从1979年Seventh Edition Unix的开发时便产生了这项技术。
+### 函数调用：
+chroot(2)函数来自`unistd.h`，原型为
 ```C
 int chroot(const char *path);
 ```
-它的作用是改变程序自己认为的根目录为path，需要root权限（其实是CAP_SYS_CHROOT，后面会讲）。       
+它的作用是改变程序自己认为的根目录为path，需要root权限(其实是CAP_SYS_CHROOT，后面会讲)。       
 chroot(2)类似chroot(8)命令，但是它在变更完根目录后什么都不会做。      
 ~~貌似我们不是C语言入门教学~~      
 不装了，直接上代码吧。      
-## 一个完整的chroot程序：
+### 一个完整的chroot程序：
 ```C
 #include <errno.h>
 #include <stdio.h>
@@ -123,59 +136,58 @@ int main(int argc, char **argv)
 cc 文件名.c
 ./a.out NEWROOT [COMMAND [ARG]...]
 ```
-十分的简单，甚至九分的简单。
+十分的简单，甚至九分的简单。      
+### 安全性：
+chroot实现了根目录隔离，但是chroot()后的进程会继承父进程特权，而且不幸的是chroot()必须以root(CAP_SYS_CHROOT)特权执行。chroot()后容器仍可访问外部资源，包括但不限于在容器内执行以下操作：      
+- kill外部进程
+- 创建设备节点并挂载磁盘设备
+- 当场逃逸出容器
+
+因此不要将chroot容器用于生产，老老实实地pull个docker image吧还是。
 ## unshare(2):
-来自sched.h，需要先`#define _GNU_SOURCE`。      
+Linux内核自2.4版本引入第一个namespace，即mount ns，当初估计作者没打算再加其他隔离就命名为CLONE_NEWNS了，此宏定义一直被沿用至今。      
+### Linux父子进程：
+众所周知(读者：喵喵喵？我怎么不知道？)，Linux下运行的所有进程都是init的子进程，子进程由父进程经fork(2)或clone(2)创建，继承父进程的文件描述符与UID/GID/权限(特权)等。      
+子进程死亡了若父进程没有对其wait(2)或waitpid(2)，则成为僵尸进程。       
+父进程先走一步的话，子进程被init直接接管，毕竟硬给其他进程安个子进程的话人家也不认。     
+在pid ns中被执行的第一个进程在该ns中被认为与init等效(具有pid 1)，当其死亡时pid ns被内核销毁，其子进程被一同销毁。      
+### 函数调用：
+unshare(2)函数来自`sched.h`，需要先`#define _GNU_SOURCE`。      
 原型为：
 ```C
 int unshare(int flags);
 ```
 它的作用是将进程以及其后的子进程的特定flag隔离。      
-具体的flag自己看man去吧，ruri没有开启net和user命名空间，它里面unshare相关的代码为：      
-## 使用unshare(2)：
+Flags:      
+```
+CLONE_NEWNS (since Linux 2.4)
+CLONE_NEWUTS (since Linux 2.6.19)
+CLONE_NEWIPC (since Linux 2.6.19)
+CLONE_NEWNET (since Linux 2.6.24)
+CLONE_SYSVSEM (since Linux 2.6.26)
+CLONE_NEWUSER (since Linux 3.8)
+CLONE_NEWPID (since Linux 3.8)
+CLONE_NEWCGROUP (since Linux 4.6)
+CLONE_NEWTIME (since Linux 5.6)
+```
+### 使用unshare(2)：
+ruri没有开启net和user命名空间，它里面unshare相关的代码为：      
 ```C
-
 pid_t init_unshare_container(bool no_warnings)
 {
   pid_t unshare_pid = INIT_VALUE;
   // 创建命名空间
-  if (unshare(CLONE_NEWNS) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that mount namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_NEWUTS) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that uts namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_NEWIPC) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that ipc namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_NEWPID) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that pid namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_NEWCGROUP) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that cgroup namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_NEWTIME) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that time namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_SYSVSEM) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that semaphore namespace is not supported on this device QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_FILES) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that we could not unshare file descriptors with child process QwQ\033[0m\n");
-  }
-  if (unshare(CLONE_FS) == -1 && !no_warnings)
-  {
-    printf("\033[33mWarning: seems that we could not unshare filesystem information with child process QwQ\033[0m\n");
-  }
+  unshare(CLONE_NEWNS);
+  unshare(CLONE_NEWUTS);
+  unshare(CLONE_NEWIPC);
+  unshare(CLONE_NEWPID);
+  unshare(CLONE_NEWCGROUP);
+  unshare(CLONE_NEWTIME);
+  unshare(CLONE_SYSVSEM);
+  unshare(CLONE_FILES);
+  unshare(CLONE_FS);
   // 修复`can't fork: out of memory`问题
+  // fork()后进程彻底被隔离
   unshare_pid = fork();
   // 修复`can't access tty`
   if (unshare_pid > 0)
@@ -190,5 +202,98 @@ pid_t init_unshare_container(bool no_warnings)
   return unshare_pid;
 }
 ```
+### 安全性：
+即使在ns全开的设备中，unshare()后容器中的进程中的root权限依然等于宿主系统中的root权限，因此最简单的攻击方式便是直接修改磁盘中的文件，当然也有其它逃逸方式可进行攻击，于是来到我们的下一节，容器安全。
+# 容器安全：
+## 进程属性查看：
+```
+cat /proc/$$/status
+```
+CapEff表示当前进程capabilities，使用`capsh --decode=xxxxx`来解码。      
+NoNewPrivs，Seccomp和Seccomp_filters后面会讲。      
+## capabilities(7)与libcap(3):
+从2.2版本开始，Linux内核将进程root特权分割为可独立控制的部分，称之为capability，capability是线程属性(per-thread attribute)，可从父进程继承。      
+通常所说的root权限其实是拥有相关capability，如chroot(2)其实需要的是CAP_SYS_CHROOT。      
+目前内核中定义的capability：
+```
+CAP_CHOWN
+CAP_DAC_OVERRIDE
+CAP_DAC_READ_SEARCH
+CAP_FOWNER
+CAP_FSETID
+CAP_IPC_LOCK
+CAP_IPC_OWNER
+CAP_KILL
+CAP_LEASE 
+CAP_LINUX_IMMUTABLE
+CAP_NET_ADMIN
+CAP_NET_BIND_SERVICE
+CAP_NET_BROADCAST
+CAP_NET_RAW
+CAP_SETGID
+CAP_SETPCAP
+CAP_SETUID
+CAP_SYS_ADMIN
+CAP_SYS_BOOT
+CAP_SYS_CHROOT
+CAP_SYS_MODULE
+CAP_SYS_NICE
+CAP_SYS_PACCT
+CAP_SYS_PTRACE
+CAP_SYS_RAWIO
+CAP_SYS_RESOURCE
+CAP_SYS_TIME
+CAP_SYS_TTY_CONFIG
+CAP_MKNOD (since Linux 2.4)
+CAP_AUDIT_CONTROL (since Linux 2.6.11)
+CAP_AUDIT_WRITE (since Linux 2.6.11)
+CAP_SETFCAP (since Linux 2.6.24)
+CAP_MAC_ADMIN (since Linux 2.6.25)
+CAP_MAC_OVERRIDE (since Linux 2.6.25)
+CAP_SYSLOG (since Linux 2.6.37)
+CAP_WAKE_ALARM (since Linux 3.0)
+CAP_BLOCK_SUSPEND (since Linux 3.5)
+CAP_AUDIT_READ (since Linux 3.16)
+CAP_BPF (since Linux 5.8)
+CAP_PERFMON (since Linux 5.8)
+CAP_CHECKPOINT_RESTORE (since Linux 5.9)
+```
+具体哪些capability需要移除那些保留可直接参照docker。      
+### 函数调用：
+我们只用到`sys/capability.h`中的cap_drop_bound(3)函数即可。      
+```C
+int cap_drop_bound(cap_value_t cap);
+```
+cap值是上面讲到的宏。
+## seccomp(2)与libseccomp
+Secommp (SECure COMPuting，安全计算模式)，自Linux 2.6.12被引入，用于对进程的系统调用进行限制，个人理解为：      
+在启用了Seccomp的设备上：      
+进程可执行的系统调用 ==（基本系统调用+进程capability所授予的特权调用）∩ seccomp允许的系统调用           
+Seccomp有strict mode和filter mode两种开启模式。
+Strict mode:严格模式，怕是已经被弃用了，只是由于历史原因留着，对咱没啥用处。
+Filter mode:BPF过滤器模式，对白名单外的系统调用进行过滤。
+### 函数调用：
+用到`seccomp.h`中的函数来开启bpf模式，完整操作过程为：
+```C
+// 初始化规则
+scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
+// 添加白名单
+seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(系统调用), 0);
+// ......
+// ......
+// 载入规则
+seccomp_load(ctx);
+```
+## NO_NEW_PRIV位：
+也是进程属性，它就像一个熔丝版奴籍(作者自己都觉得奇怪的比喻，但是不觉得很合理吗？)，一旦被设置，进程自身及其子进程均无法主动取消此标志。此属性的作用是限制进程的特权集始终小于等于其父进程，也就是说在设置后进程特权只能减少不能增加。此标志设置后可执行文件suid位以及capability属性均无法生效，就连切换用户为普通用户后执行sudo命令也会失效。      
+它的设置十分简单，直接使用`sys/prctl.h`中的prctl(2)函数：      
+```
+prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+```
+# 后记：
+Des/md5都是在设计之初被认为可以提升安全性的技术，后来随着技术发展逐渐被攻破变得不再安全，RSA等算法足够安全，可如果我掏出量子计算，阁下又该如何应对？阁下可以觉得安卓12以前的系统十分甚至九分的安全，拼xx也可以在阁下的手机桌面上隐藏掉自己的图标并开始胡作非为。计算机安全的道路可能永远没有尽头，但至少，我们可以追随新的技术，让风险值向零趋近。
 
-# 咕咕咕。。。。
+
+<p align="center">優しさも笑顔も夢の語り方も、</p>
+<p align="center">知らなくて全部、</p>
+<p align="center">君を真似たよ</p>

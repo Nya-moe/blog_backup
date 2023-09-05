@@ -258,5 +258,4 @@ hexo d
 配置里面图片混用一张是因为这只猫猫太懒，千万别学习。
 最后就是，学习下md语法，写博客别跟猫猫一样水就好了。
 
-<p align="center">本文著作权归Moe-hacker所有</p>
 <p align="center">copyright (©) 2022 Moe-hacker</p>
