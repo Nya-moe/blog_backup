@@ -1,8 +1,8 @@
 ---
 title: C语言实现简单的pstree(子进程查询)功能
 date: 2023-09-19 00:05:32
-cover: /img/gura.jpg
-top_img: /img/gura.jpg
+cover: /img/gnu.jpg
+top_img: /img/gnu.jpg
 tags:
   - Linux
   - C语言
