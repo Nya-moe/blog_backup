@@ -11,7 +11,7 @@ top_img: /img/moe-sysfs.png
 迟来的更新喵～
 这篇文章我们来介绍下几个sysfs接口的调用。需要注意的是，由于安卓内核碎片化过于严重，各个厂商之间的代码差异过大，因此直接和内核交互来调用驱动并不是一个通用思路。但是对于某些特定设备的驱动调用却是个简单可行的方法，比如nothing phone的灯带。
 ### 手电筒：
-一般是个led类设备，小米10ultra的手电筒被注册到了/sys/class/leds/flashlight/下，当然也有部分设备叫led0或者其他，nothing的手电筒驱动猫猫还没找到，猫猫好笨喵呜～
+一般是个led类设备，小米10ultra的手电筒被注册到了/sys/class/leds/flashlight/下，当然也有部分设备叫led0或者其他，nothing的手电筒驱动咱还没找到，咱好笨喵呜～
 目录中有两个文件对我们有用：brightness和max_brightness
 max_brightness的内容是个固定值，定义了灯的最大亮度。
 brightness的内容是个无符号整形数值，定义了灯的亮度，向其写入一个不大于max_brightness的合法数值，灯会亮，数越大灯越亮，写入0关闭手电筒。

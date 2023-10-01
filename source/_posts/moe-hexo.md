@@ -13,7 +13,7 @@ cover: /img/gura.jpg
 本博客在linux环境下搭建，部分内容于windows下稍有不同。
 你需要：git，ssh，nodejs，npm，github-cli。
 你可能还需要：一个脑子。
-可惜猫猫是没有脑子的喵呜………
+可惜咱是没有脑子的喵呜………
 去github账号设置=>开发者设置=>令牌中获取一个token。
 在你的github账户下创建 用户名.github.io这个仓库。
 注：github-cli的token为明文存储，请勿在不受您本人信任的设备上用这种方式登录。
@@ -182,7 +182,7 @@ aside:
     sort: date # date or updated
     sort_order: # Don't modify the setting unless you know how it works
 ```
-几张图片具体内容在猫猫博客仓库里有，请在github打开本项目仓库。
+几张图片具体内容在咱博客仓库里有，请在github打开本项目仓库。
 ### 链接配置：
 ```
 hexo new page link
@@ -233,7 +233,7 @@ cover: /img/cover.jpg
 <p align="center">文字</p>
 ```
 #### 行首缩进：
-本人的博客遇到了&emsp;等字符不生效的问题，事实上这个就是这么直接打出来的。
+本人的博客遇到了&emsp;等字符不生效的问题，事实上这个符号就是这么直接打出来的。
 不过咱有办法：
 ```html
 <style>
@@ -255,7 +255,5 @@ hexo d
 图片放在 ~/hexo/public/img中，命名别搞混就行。
 配置开启了一些动效，可以关闭。
 部分配置自己试一下就知道是什么内容了。
-配置里面图片混用一张是因为这只猫猫太懒，千万别学习。
-最后就是，学习下md语法，写博客别跟猫猫一样水就好了。
-
-<p align="center">copyright (©) 2022 Moe-hacker</p>
+配置里面图片混用一张是因为这只咱太懒，千万别学习。
+最后就是，学习下md语法，写博客别跟咱一样水就好了。

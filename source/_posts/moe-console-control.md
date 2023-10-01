@@ -8,7 +8,7 @@ tags:
 - Shell
 - Termux
 ---
-建议真的用printf/echo测试下。      
+建议先用printf/echo测试下。      
 更改光标风格，仅在Termux有效：      
 ```
 "\e[2 q"

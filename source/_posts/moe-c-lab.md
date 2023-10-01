@@ -7,7 +7,7 @@ tags:
   - Linux
   - C语言
 ---
-最近在开发ruri时遇到不少问题，猫猫也是第一次写C，早知道头顶这么发凉就去用某邪教了呜喵～      
+最近在开发ruri时遇到不少问题，咱也是第一次写C，早知道头顶这么发凉就去用某邪教了呜喵～      
 好了好了，C语言还是有许多优点的，只是可能入门成本高些罢了，如果善用测试工具的话还是没有那么糟糕的，话不多说我们开始今天的正文。
 ## 首要前提：
 代码没bug的就不要调试了，编程第一法则不就是能跑的代码不要动嘛喵～
@@ -18,20 +18,20 @@ tags:
 如果编译器不报警呢？
 于是就是今天的主题了--如何面对编译时无法找出的bug。
 ## 消极面对：
-部分内存问题可以通过编译器参数被隐藏，编译时加上`-O3 -z noexecstack -z now -fstack-protector-all -fPIE `说不定就能跑了喵～
+部分内存问题可以通过编译器参数被隐藏，编译时加上`-O3 -z noexecstack -z now -ftrivial-auto-var-init=pattern -Wl,-z,relro,-z,now -fstack-clash-protection -fstack-protector-all -fPIE`说不定就能跑了喵～
 好了本文完，下期再见喵～
 桥豆麻袋，自己的项目中的代码肯定不能挖坑埋雷啊喵～
 ## 积极面对：
 中国有句古话叫做，食食物者为俊杰，眼下的各种工具，我想一定能找到阁下的bug。
 ### 使用clang-tidy检查代码
 clang-tidy是llvm项目的一部分，用于代码静态检测。
-事实上由于clang-tidy过于优秀，大部分简单的bug在这里就会被检测出来，根本用不到运行，当然，它无法检查代码的功能是否可以正确实现。
+事实上由于clang-tidy过于优秀，大部分简单的bug在这里就会被检测出来，根本用不到真的运行，当然，它无法检查代码的功能是否可以正确实现，所以偶尔也必须得上gdb。
 基本用法：
 ```sh
 clang-tidy xxx.c -- 编译参数
 ```
 注意编译参数前的`--`，后面接clang/gcc编译时的参数。
-但是，很多规则不是有用的，比如对strlen.h中函数内存安全的报警就非常多余，甚至clang-tidy会建议使用BSD中的函数替代，对此猫猫建议还是不要建议了。
+但是，很多规则不是有用的，比如对strlen.h中函数内存安全的报警就非常多余，甚至clang-tidy会建议使用BSD中的函数替代，对此咱建议clang-tidy还是不要建议了。
 因此我们需要关闭部分检测项目。
 使用`--checks=-检测项`来关闭检测项。
 ruri中默认关闭的检测项：
@@ -43,9 +43,9 @@ ruri中默认关闭的检测项：
 ```
 --checks=*
 ```
-比如ruri中的strictcheck：
+比如ruri中的`make check`：
 ```
---checks=*,-clang-analyzer-security.insecureAPI.strcpy,-altera-unroll-loops,-cert-err33-c,-concurrency-mt-unsafe,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-function-cognitive-complexity,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-no-recursion,-bugprone-easily-swappable-parameters,-readability-identifier-length,-cert-err34-c,-bugprone-assignment-in-if-condition
+ --checks=*,-clang-analyzer-security.insecureAPI.strcpy,-altera-unroll-loops,-cert-err33-c,-concurrency-mt-unsafe,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-function-cognitive-complexity,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-no-recursion,-bugprone-easily-swappable-parameters,-readability-identifier-length,-cert-err34-c,-bugprone-assignment-in-if-condition,-altera*
 ```
 目前ruri已经过了这些检测，但愿读者的内存永远不要泄漏喵～
 由于clang-tidy检测项太多，有些是对理解难度甚至是对todo风格等的检查，有些检查根本没法满足比如函数使用嵌套也会有警告，因此检查时需要我们手动对我们认为无效的警告进行过滤。      
@@ -79,8 +79,8 @@ Shadow bytes around the buggy address:
 貌似还.......挺好看......
 一般来讲出问题的行会在后面汇报。
 注意：建议使用clang-tidy检查有bug的代码，因为一旦内存有问题的话很可能程序不会在出问题那行崩溃。
-ASAN面对fork()后的程序貌似有点抽风，猫猫写的代码好不容易跑起来了，结果退出时卡在`sched_yield()`这个系统调用，但是猫猫的程序出口都在main()，子进程最终会执行exec()，所以怀疑是ASAN的问题，猫猫暂时也没能解决呜呜呜～
-在有些教程中ASAN偶尔会配合addr2line使用，猫猫实测貌似也定位不到相关行，或许是猫猫太笨了喵～
+ASAN面对fork()后的程序貌似有点抽风，ruri好不容易跑起来了，结果退出时卡在`sched_yield()`这个系统调用，欺负萌新是吧呜呜呜～      
+在有些教程中ASAN偶尔会配合addr2line使用，实测貌似也定位不到相关行，或许是咱太笨了喵～
 ### 使用GDB调试工具
 GDB全称The GNU Project Debugger，是GNU项目的一部分。建议使用来检测代码是否实现而非内存问题，除非clang-tidy无法检测出来。
 在编译时加如参数`-ggdb`，不要开任何优化，然后就可以使用gdb来调试程序了。
@@ -97,7 +97,7 @@ Program received signal SIGSEGV, Segmentation fault.
 0x0000007ff4505a10 in __strlen_aarch64 ()
 from /apex/com.android.runtime/lib64/bionic/libc.so
 ```
-猫猫甚至还在未初始化内存的结构体中读到过一个ELF，估计是指针指向程序头之类的地方了。
+咱甚至还在未申请到内存的结构体中读到过一个ELF，估计是指针指向程序头之类的地方了。
 基本命令：
 ```sh
 gdb ./可执行文件
@@ -142,7 +142,7 @@ up
 ```
 p 变量名/表达式
 ```
-这个功能真的震惊到猫猫了，因为C语言表达式都能用。
+这个功能真的震惊到咱了，因为C语言表达式都能用。
 比如：
 ```
 (gdb) p container_info->container_dir
@@ -169,7 +169,7 @@ strace -p 进程id
 用strace来创建：
 strace ./可执行文件
 ```
-所以猫猫的程序在ASAN下卡在`sched_yield() = 0`是为什么啊喵！！！
+所以咱的程序在ASAN下卡在`sched_yield() = 0`是为什么啊喵！！！
 ## 总结：
 C语言虽然很容易写出bug，但是善用工具，养成良好的代码风格还是可以避免大部分问题的。还有就是，得会点英语。
 群里曾经有一位萌新问道：

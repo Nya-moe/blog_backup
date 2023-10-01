@@ -24,7 +24,7 @@ cover: /img/cover.jpg
 没用的输出记得丢弃。
 \> /dev/null丢不掉就2>&1 > /dev/null。
 不要定义太复杂的架构，比如函数互相调用。
-当然猫猫基本没怎么遵守过。
+当然咱基本没怎么遵守过。
 ### 三元表达式：
 比如你想要这样一段的功能：
 ```sh
@@ -109,7 +109,7 @@ sed -i "s/[0-9]*/数字替换/" test
 cat test
 ```
 正则表达式具体内容请自行利用搜索引擎。
-想当年猫猫要是会用，termux-container里的屎山也能少点。
+想当年咱要是会用，termux-container里的屎山也能少点。
 ### 更改光标样式：
 ```sh
 printf '\e[2 q'
@@ -193,7 +193,3 @@ test ls
 ```sh
 trap "" SIGINT
 ```
-
-<p align="center">本文著作权归Moe-hacker所有</p>
-<p align="center">copyright (©) 2022 Moe-hacker</p>
-

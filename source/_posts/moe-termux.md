@@ -8,7 +8,7 @@ cover: /img/termux-motd.jpg
 top_img: /img/termux-motd.jpg
 ---
 ### termux版本：
-这里猫猫比较喜欢termux-monet，带有monet取色支持和背景自定义。
+这里咱比较喜欢termux-monet，带有monet取色支持和背景自定义。
 链接：[HardcodedCat/termux-monet](https://github.com/HardcodedCat/termux-monet)
 ### 欢迎信息：
 原版：[Generator/termux-motd](https://github.com/Generator/termux-motd)           
@@ -25,7 +25,7 @@ mv ~/.motd/26-docker.disabled ~/.motd/26-docker
 ```
 自启动docker并显示信息。
 ### 配色修改：
-贴出猫猫的配色：
+贴出咱的配色：
 ```
 background:     #1E1E2E
 foreground:     #CDD6F4
@@ -78,6 +78,3 @@ su -c /system/bin/device_config put activity_manager max_phantom_processes 21474
 su -c setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false
 ```
 话说安卓系统连本猫的root进程都敢杀可真够狂的喵！
-
-<p align="center">本文著作权归Moe-hacker所有</p>
-<p align="center">copyright (©) 2022 Moe-hacker</p>
