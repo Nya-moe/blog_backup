@@ -216,47 +216,47 @@ NoNewPrivs，Seccomp和Seccomp_filters后面会讲。
 通常所说的root权限其实是拥有相关capability，如chroot(2)其实需要的是CAP_SYS_CHROOT。      
 目前内核中定义的capability：
 ```
-CAP_CHOWN
-CAP_DAC_OVERRIDE
-CAP_DAC_READ_SEARCH
-CAP_FOWNER
-CAP_FSETID
-CAP_IPC_LOCK
-CAP_IPC_OWNER
-CAP_KILL
-CAP_LEASE 
-CAP_LINUX_IMMUTABLE
-CAP_NET_ADMIN
-CAP_NET_BIND_SERVICE
-CAP_NET_BROADCAST
-CAP_NET_RAW
-CAP_SETGID
-CAP_SETPCAP
-CAP_SETUID
-CAP_SYS_ADMIN
-CAP_SYS_BOOT
-CAP_SYS_CHROOT
-CAP_SYS_MODULE
-CAP_SYS_NICE
-CAP_SYS_PACCT
-CAP_SYS_PTRACE
-CAP_SYS_RAWIO
-CAP_SYS_RESOURCE
-CAP_SYS_TIME
-CAP_SYS_TTY_CONFIG
-CAP_MKNOD (since Linux 2.4)
-CAP_AUDIT_CONTROL (since Linux 2.6.11)
-CAP_AUDIT_WRITE (since Linux 2.6.11)
-CAP_SETFCAP (since Linux 2.6.24)
-CAP_MAC_ADMIN (since Linux 2.6.25)
-CAP_MAC_OVERRIDE (since Linux 2.6.25)
-CAP_SYSLOG (since Linux 2.6.37)
-CAP_WAKE_ALARM (since Linux 3.0)
-CAP_BLOCK_SUSPEND (since Linux 3.5)
-CAP_AUDIT_READ (since Linux 3.16)
-CAP_BPF (since Linux 5.8)
-CAP_PERFMON (since Linux 5.8)
-CAP_CHECKPOINT_RESTORE (since Linux 5.9)
+CAP_CHOWN 变更文件所有权
+CAP_DAC_OVERRIDE 忽略文件的DAC访问限制
+CAP_DAC_READ_SEARCH 忽略文件读及目录搜索的DAC访问限制
+CAP_FOWNER 忽略文件属主ID必须和进程用户ID相匹配的限制
+CAP_FSETID 允许设置文件的setuid位
+CAP_IPC_LOCK 允许锁定共享内存片段
+CAP_IPC_OWNER 忽略IPC所有权检查
+CAP_KILL 向非当前用户进程发送信号（杀死）
+CAP_LEASE 允许修改文件锁的FL_LEASE标志
+CAP_LINUX_IMMUTABLE 允许修改文件的IMMUTABLE和APPEND属性标志
+CAP_NET_ADMIN 允许执行网络管理任务
+CAP_NET_BIND_SERVICE 允许绑定到小于1024的端口
+CAP_NET_BROADCAST 允许网络广播和多播访问
+CAP_NET_RAW 使用原始套接字
+CAP_SETGID 设置gid
+CAP_SETPCAP 设置其他进程capability
+CAP_SETUID 设置uid
+CAP_SYS_ADMIN 允许执行系统管理任务，如加载或卸载文件系统、设置磁盘配额等
+CAP_SYS_BOOT 重启设备
+CAP_SYS_CHROOT 调用chroot
+CAP_SYS_MODULE 加载/删除内核模块
+CAP_SYS_NICE 允许提升优先级及设置其他进程的优先级
+CAP_SYS_PACCT 允许执行进程的BSD式审计
+CAP_SYS_PTRACE 允许对任意进程进行ptrace
+CAP_SYS_RAWIO 访问原始块设备
+CAP_SYS_RESOURCE 忽略资源限制
+CAP_SYS_TIME 设置系统时间
+CAP_SYS_TTY_CONFIG 设置tty设备
+CAP_MKNOD (since Linux 2.4) 创建设备节点
+CAP_AUDIT_CONTROL (since Linux 2.6.11) 启用和禁用内核审计；改变审计过滤规则；检索审计状态和过滤规则
+CAP_AUDIT_WRITE (since Linux 2.6.11) 将记录写入内核审计日志
+CAP_SETFCAP (since Linux 2.6.24) 允许为文件设置任意的capabilities
+CAP_MAC_ADMIN (since Linux 2.6.25) 允许MAC配置或状态更改
+CAP_MAC_OVERRIDE (since Linux 2.6.25) 覆盖MAC设置
+CAP_SYSLOG (since Linux 2.6.37) 允许使用syslog()系统调用
+CAP_WAKE_ALARM (since Linux 3.0) 允许触发一些能唤醒系统的东西
+CAP_BLOCK_SUSPEND (since Linux 3.5) 使用可以阻止系统挂起的特性
+CAP_AUDIT_READ (since Linux 3.16) 允许通过 multicast netlink 套接字读取审计日志
+CAP_BPF (since Linux 5.8) 使用bpf()
+CAP_PERFMON (since Linux 5.8) 使用perf_event_open()
+CAP_CHECKPOINT_RESTORE (since Linux 5.9) 调用checkpoint/restore
 ```
 具体哪些capability需要移除那些保留可直接参照docker。      
 ### 函数调用：
@@ -281,6 +281,8 @@ scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
 seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(系统调用), 0);
 // ......
 // ......
+// 关闭默认NO_NEW_PRIV位
+seccomp_attr_set(ctx, SCMP_FLTATR_CTL_NNP, 0);
 // 载入规则
 seccomp_load(ctx);
 ```
