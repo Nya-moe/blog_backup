@@ -292,6 +292,11 @@ seccomp_load(ctx);
 ```
 prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
 ```
+## Secure bit:
+内核对进程有额外的secure bit属性，可以去man里面了解下，目前作者只加入了SECBIT_NO_CAP_AMBIENT_RAISE：
+```C
+prctl(PR_SET_SECUREBITS, SECBIT_NO_CAP_AMBIENT_RAISE);
+```
 # 后记：
 Des/md5都是在设计之初被认为可以提升安全性的技术，后来随着技术发展逐渐被攻破变得不再安全，RSA等算法足够安全，可如果我掏出量子计算，阁下又该如何应对？阁下可以觉得安卓12以前的系统十分甚至九分的安全，拼xx也可以在阁下的手机桌面上隐藏掉自己的图标并开始胡作非为。计算机安全的道路可能永远没有尽头，但至少，我们可以追随新的技术，让风险值向零趋近。
 
