@@ -29,4 +29,4 @@ zsh还不是默认shell。
 文中释伴为shebang的中文。      
 exec指`exec(3) `族函数，其实shell执行命令还需要一次fork/clone。      
 ELF binary是Linux下的可执行二进制文件，也就是一般意义上的程序。      
-fd是文件描述符号，在/proc/${pid}/fd下有文件映射，但sh一般不会偷窥子进程fd因为那样也没啥用。      
+fd是文件描述符号，在/proc/${pid}/fd下有文件映射，但sh一般不会偷窥子进程fd，因为那样也没啥用。      

@@ -77,4 +77,4 @@ su -c /system/bin/device_config set_sync_disabled_for_tests persistent
 su -c /system/bin/device_config put activity_manager max_phantom_processes 2147483647
 su -c setprop persist.sys.fflag.override.settings_enable_monitor_phantom_procs false
 ```
-话说安卓系统连本猫的root进程都敢杀可真够狂的喵！
+话说安卓系统连root进程都敢杀可真够狂的喵！

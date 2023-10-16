@@ -210,6 +210,7 @@ void print_tree(struct PSTREE *pstree, int depth)
    * Print info of current pid.
    * Print info of the child tree of current pid.
    * Print info of ->next node.
+   × So that it will walk all the nodes.
    */
   if (pstree == NULL)
   {
