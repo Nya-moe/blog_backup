@@ -11,14 +11,15 @@ tags:
 好了好了，C语言还是有许多优点的，只是可能入门成本高些罢了，如果善用测试工具的话还是没有那么糟糕的，话不多说我们开始今天的正文。       
 ## 首要前提：
 代码没bug的就不要调试了，编程第一法则不就是能跑的代码不要动嘛喵～      
-过早的优化是万恶之源，测试时不要开-O3，且尽量使用`-O0 -fno-stack-protector -fno-omit-frame-pointer`来测试。      
+过早的优化是万恶之源，测试时不要开-O2，且尽量使用`-O0 -fno-omit-frame-pointer -z norelro -z execstack -no-pie -fno-stack-protector -Wall -Wextra -pedantic -Wconversion`来测试。      
+至于O3。。。除非编码特别规范否则几乎是炸屎。      
 那如果有bug呢？      
 首先得能过编译器，编译器都报error的代码再高端的调试工具也无能为力。       
 然后检查编译器的警告，加上参数`-Wall -Wextra`编译然后查看警告，若是编译器警告都无法修复的话。。。这bug咱还是别修了吧喵～      
 如果编译器不报警呢？      
 于是就是今天的主题了--如何面对编译时无法找出的bug。       
 ## 消极面对：
-部分内存问题可以通过编译器参数被隐藏，编译时加上`-O3 -z noexecstack -z now -ftrivial-auto-var-init=pattern -Wl,-z,relro,-z,now -fstack-clash-protection -fstack-protector-all -fPIE`说不定就能跑了喵～      
+部分内存问题可以通过编译器参数被隐藏，编译时加上`-fPIE -z noexecstack -z now -fstack-protector-all -fstack-clash-protection -mshstk -O2`说不定就能跑了喵～      
 好了本文完，下期再见～      
 桥豆麻袋，自己的项目中的代码肯定不能挖坑埋雷啊喵～     
 ## 积极面对：
@@ -45,7 +46,7 @@ ruri中默认关闭的检测项：
 ```
 比如ruri中的`make check`：
 ```
- --checks=*,-clang-analyzer-security.insecureAPI.strcpy,-altera-unroll-loops,-cert-err33-c,-concurrency-mt-unsafe,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-function-cognitive-complexity,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-no-recursion,-bugprone-easily-swappable-parameters,-readability-identifier-length,-cert-err34-c,-bugprone-assignment-in-if-condition,-altera*
+ --checks=*,-clang-analyzer-security.insecureAPI.strcpy,-altera-unroll-loops,-cert-err33-c,-concurrency-mt-unsafe,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-function-cognitive-complexity,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-bugprone-easily-swappable-parameters
 ```
 目前ruri已经过了这些检测，但愿读者的内存永远不要泄漏喵～      
 由于clang-tidy检测项太多，有些是对理解难度甚至是对todo风格等的检查，有些检查根本没法满足比如函数使用嵌套也会有警告，因此检查时需要我们手动对我们认为无效的警告进行过滤。      
@@ -85,7 +86,7 @@ ASAN面对fork()后的程序貌似有点抽风，ruri好不容易跑起来了，
 GDB全称The GNU Project Debugger，是GNU项目的一部分。建议使用来检测代码是否实现而非内存问题，除非clang-tidy无法检测出来，在面对踩内存/带goto的代码时用GDB可能会十分痛苦。      
 在编译时加如参数`-ggdb`，不要开任何优化，然后就可以使用gdb来调试程序了。     
 注意，代码里少写两个goto有助于调试，白皮书说C语言提供了可以随意滥用的goto语句，瞧瞧这说的，像话吗喵！！！      
-注意，请先使用clang-tidy检查是否有leak of memory，否则你可能会遇上这种冥场面：      
+注意，请先使用clang-tidy检查是否有leak of memory等内存问题，否则你可能会遇上这种冥场面：      
 ```logs
 Breakpoint 2, check_container (
 container_dir=0x7ffffffdb0 "./t") at container.c:601
@@ -153,13 +154,67 @@ $1 = 0x7c2ff7ca8500 "/home/moe-hacker/t"
 ```
 watch 变量名
 ```
-两个特殊的breakpoint：      
+一个特殊的breakpoint：      
 ```
-在入口处：
-b main
 在出口处：
 b exit
 ```
+### GDB插件推荐：peda
+peda(Python Exploit Development Assistance for GDB)是隔壁PWN大佬们的玩具，虽然咱看不懂汇编，不过其自动打印信息的功能还是很有帮助的。并且最重要的是它很帅啊！！！
+
+看下对比：
+```log
+[----------------------------------registers-----------------------------------]
+RAX: 0x1 
+RBX: 0x7fffffffd658 --> 0x7fffffffda73 ("/home/moe-hacker/ruri/ruri")
+RCX: 0x0 
+RDX: 0x0 
+RSI: 0x5555555682a0 ("\nor a full user guide, see `man ruri`\033[0m\nis program\n\nk if init command is like `su -`\n")
+RDI: 0x1 
+RBP: 0x1 
+RSP: 0x7fffffff6398 --> 0x55555555f1c0 (mov    r14,QWORD PTR [rip+0x7e31]        # 0x555555566ff8)
+RIP: 0x7ffff7dd0df0 (<exit>:    endbr64)
+R8 : 0x410 
+R9 : 0x1 
+R10: 0x4 
+R11: 0x202 
+R12: 0x1 
+R13: 0x7fffffffd668 --> 0x7fffffffda8e ("SHELL=/bin/zsh")
+R14: 0x7ffff7ffd000 --> 0x7ffff7ffe2d0 --> 0x555555554000 --> 0x10102464c457f 
+R15: 0x7fffffffd658 --> 0x7fffffffda73 ("/home/moe-hacker/ruri/ruri")
+EFLAGS: 0x202 (carry parity adjust zero sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x7ffff7dd0ddd:      call   0x7ffff7e19670 <__lll_lock_wait_private>
+   0x7ffff7dd0de2:      jmp    0x7ffff7dd0bac
+   0x7ffff7dd0de7:      nop    WORD PTR [rax+rax*1+0x0]
+=> 0x7ffff7dd0df0 <exit>:       endbr64
+   0x7ffff7dd0df4 <exit+4>:     push   rax
+   0x7ffff7dd0df5 <exit+5>:     pop    rax
+   0x7ffff7dd0df6 <exit+6>:     mov    ecx,0x1
+   0x7ffff7dd0dfb <exit+11>:    mov    edx,0x1
+[------------------------------------stack-------------------------------------]
+0000| 0x7fffffff6398 --> 0x55555555f1c0 (mov    r14,QWORD PTR [rip+0x7e31]        # 0x555555566ff8)
+0008| 0x7fffffff63a0 --> 0x0 
+0016| 0x7fffffff63a8 --> 0x0 
+0024| 0x7fffffff63b0 --> 0x0 
+0032| 0x7fffffff63b8 --> 0x0 
+0040| 0x7fffffff63c0 --> 0x0 
+0048| 0x7fffffff63c8 --> 0x0 
+0056| 0x7fffffff63d0 --> 0x0 
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x00007ffff7dd0df0 in exit () from /usr/lib/libc.so.6
+gdb-peda$ 
+```
+不带peda：
+
+```
+Breakpoint 1, 0x00007ffff7dd0df0 in exit () from /usr/lib/libc.so.6
+(gdb) 
+```
+最起码有种黑客的感觉喵～
+
 ### 使用strace工具：
 strace全称Linux Syscall Tracer，听名字就知道，用于追踪进程的系统调用。众所周知，进程总要有系统调用，追踪这部分内容有时可以帮助我们发现问题。      
 基本用法：      
