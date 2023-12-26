@@ -1,5 +1,5 @@
 ---
-title: 终端控制码表by渢鸞
+title: 终端控制码表by沨鸾
 date: 2023-09-04 20:57:05
 top_img: /img/gura.jpg
 cover: /img/gura.jpg
