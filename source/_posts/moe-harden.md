@@ -11,10 +11,11 @@ tags:
 实在想不出开头就不想了，本期文章咱们来讲讲Clang/GCC的安全编译与代码优化选项。
 注意：优化选项建立在代码正确的前提下，且最好不要在使用GDB等工具调试时开启任何优化选项。
 # LTO（Link-Time Optimization）：
-中文是`链接时优化`，最初由LLVM实现，功能有：
+中文是`链接时优化`，最初由LLVM实现，可做到在编译时跨模块执行代码优化，功能有：
 - 函数自动内联
 - 去除无用代码
 - 全局优化
+
 LTO有大型LTO（monolithic LTO）和增量LTO（ThinLTO）两种实现，其中ThinLTO内存占用较少。
 虽然对于小型项目几乎无影响，但Google的内核源码由于默认是大型LTO，曾将咱的电脑整OOM了三回啊三回。
 据说ThinLTO有时反而有更好的性能，具体咱不清楚。
@@ -26,7 +27,7 @@ LTO有大型LTO（monolithic LTO）和增量LTO（ThinLTO）两种实现，其�
 -flto=thin
 ```
 # PIE（Position-Independent Executables）：
-中文是`位置无关可执行程序`，配合内核的ASLR（Address Space Layout Randomization，地址空间随机化）功能将代码段地址随机化。
+中文是`位置无关可执行程序`，配合内核的ASLR（Address Space Layout Randomization，地址空间随机化）功能将代码段地址随机化，以增大攻击难度。
 编译参数：
 ```
 -fPIE
@@ -38,7 +39,7 @@ LTO有大型LTO（monolithic LTO）和增量LTO（ThinLTO）两种实现，其�
 -z noexecstack
 ```
 # RELRO（Relocation Read-Only）：
-中文是`只读重定向`，用于保护GOT（Global Offset Table，全局偏移表）避免其被篡改。
+中文是`只读重定向`，用于保护GOT（Global Offset Table，全局偏移表）避免其符号被篡改。
 编译参数（注：用于链接阶段）：
 ```
 -z now
@@ -62,7 +63,7 @@ LTO有大型LTO（monolithic LTO）和增量LTO（ThinLTO）两种实现，其�
 -mshstk
 ```
 # 变量自动初始化：
-对于未初始化的变量可以自动填0,咱建议还是在代码里初始化为0比较好。
+对于未初始化的变量可以自动填0，咱建议还是在代码里初始化为0比较好。
 此特性可能需要较新版本编译器。
 编译参数：
 ```
