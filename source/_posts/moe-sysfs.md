@@ -52,8 +52,33 @@ echo 0 > /sys/class/leds/aw210xx_led/video_leds_effect
 部分设备会写入/sys/class/timed_output/vibrator/enable
 部分设备会写入/sys/class/leds/vibrator/duration后写入/sys/class/leds/vibrator/activate
 其中duration设置震动长度，activate激活震动。
-但很多使用线性马达的设备采用的并非统一节点,而是作为input设备，设备信息在/proc/bus/input/devices中，含有haptic字样的。
-以下是对小米10ultra马达的研究：
+但很多使用线性马达的设备采用的并非统一接口,而是作为input设备，设备信息在/proc/bus/input/devices中，含有haptic字样的。
+不过有两个比较有意思的事：
+Nothing Phone(1)使用和小米10u一样的马达驱动芯片，但咱找不到任何控制接口。
+Nothing Phone(2)能找到接口在`/sys/devices/platform/soc/88c000.i2c/i2c-3/3-005a/leds/aw_vibrator/
+`，但除了activate文件之外的文件貌似都没作用，甚至有个文件cat后会触发短暂的长震。
+Nothing Phone(2)接口文件列表：
+```
+.../files/home # cd /sys/devices/platform/soc/88c000.i2c/i2c-3/3-005a/leds/aw_vibrator/
+.../leds/aw_vibrator # ls
+activate       f0                 ram_f0
+activate_mode  f0_save            ram_num
+auto_boost     gain               ram_update
+awrw           gun_type           ram_vbat_comp
+brightness     haptic_audio       reg
+bullet_nr      haptic_audio_time  rtp
+cali           index              seq
+cali_data      loop               state
+cont           lra_resistance     subsystem
+cont_brk_time  max_brightness     trig
+cont_drv_lvl   osc_cali           trigger
+cont_drv_time  osc_save           uevent
+cont_wait_num  power              vbat_monitor
+device         prctmode           vmax
+duration       ram_cali
+.../leds/aw_vibrator #
+```
+#### 对小米10ultra马达的研究：
 查看/proc/bus/input/devices：
 ```text
 I: Bus=0000 Vendor=0000 Product=0000 Version=0000
@@ -61,7 +86,7 @@ N: Name="aw8697_haptic"
 P: Phys=
 S: Sysfs=/devices/platform/soc/a8c000.i2c/i2c-2/2-005a/input/input3
 U: Uniq=
-H: Handlers=event3 
+H: Handlers=event3
 B: PROP=0
 B: EV=200001
 B: FF=120070000 0
@@ -73,11 +98,10 @@ cas:/sys/devices/platform/soc/a8c000.i2c/i2c-2/2-005a/input/input3/device # ls
 activate       auto_boost  cont          cont_td      driver     f0        f0_value  input           modalias  osc_cali  prctmode    ram_vbat_comp  seq        uevent        wakeup
 activate_mode  bst_vol     cont_drv      cont_zc_thr  duration   f0_check  gain      loop            name      osc_save  ram         reg            subsystem  vbat_monitor
 activate_test  cali        cont_num_brk  custom_wave  effect_id  f0_save   index     lra_resistance  of_node   power     ram_update  rtp            trig       vmax
-cas:/sys/devices/platform/soc/a8c000.i2c/i2c-2/2-005a/input/input3/device # 
+cas:/sys/devices/platform/soc/a8c000.i2c/i2c-2/2-005a/input/input3/device #
 ```
 activate激活，duration设置时长，activate_mode设置震动模式，有0,1,3三种，0无法设置时长
 ```sh
-echo 1 > activate_mode &&echo 10000 > duration&&echo 1 > activate 
+echo 1 > activate_mode &&echo 10000 > duration&&echo 1 > activate
 ```
 想想都爽......想到哪去了啊喂（脸红）
-nothing的驱动至今还没搞明白，就这样吧，下篇见喵（咕咕咕咕咕...........
