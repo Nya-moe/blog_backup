@@ -50,7 +50,7 @@ clang-format文件需自备。
 ```
 # 代码：
 C语言规范默认设置为GNU99，可视情况修改。
-```
+```Makefile
 # Premature optimization is the root of evil.
 CCCOLOR     = \033[1;38;2;254;228;208m
 LDCOLOR     = \033[1;38;2;254;228;208m
