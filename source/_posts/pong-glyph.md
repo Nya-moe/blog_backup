@@ -13,7 +13,7 @@ top_img: /img/pong-glyph.jpg
 # 内核源码：
 很不幸，除了知道了灯带型号是aw20036之外没啥收获，原因无他，单纯看不懂代码，注释都不怎么写这不欺负萌新吗。。。
 仓库里相关代码文件甚至具有可执行权限，看来开发者也是和咱一样只知道无脑777的杂鱼呢。
-在leds目录下有个TODO文件，然后看到一段离谱的留言：
+在leds目录下有个TODO文件(这是忘了配置gitignore吗？)，然后看到一段离谱的留言：
 ```
 * Command line utility to manipulate the LEDs?
 
