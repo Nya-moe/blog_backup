@@ -1,14 +1,13 @@
 ---
 title: 使用binfmt_misc和QEMU编写跨架构容器
 date: 2024-01-17 22:45:03
-cover: /img/binfmt.jpg
-top_img: /img/binfmt.jpg
+cover: /img/binfmt.png
+top_img: /img/binfmt.png
 tags:
 - Linux
 - C语言
 - Container
 ---
-# 此篇文章尚未完善，备份下明天再写。。。
 经过“非常简单”的开发过程，咱终于把binfmt_misc支持加入了ruri新版本中：
 ```diff
  17 files changed, 562 insertions(+), 60 deletions(-)
@@ -16,36 +15,46 @@ tags:
 可以看到修改并不多，嗯。
 实际上很多修改并不涉及核心内容的（心虚）
 好了我们还是来讲讲binfmt_misc的应用吧：
-首先我们要挂载binfmt_misc接口:
+## 简介：
+binfmt_misc是一个内核级别的除对标准同架构ELF以及#!开头的脚本外的可执行文件进行exec(2)的支持，需要内核开启CONFIG_BINFMT_MISC。
+需要注意的是binfmt_misc只是将某个支持的可执行文件配置为打开另一种不受支持的格式的文件的解释器，以做到扩展其他格式可执行文件支持。
+那么它有什么用呢？
+如果我们需要在aarch64的平台上打开一个x86_64的ELF文件，我们需要：
+```sh
+qemu-x86_64-static a-x86-64-elf-binary
+```
+但如果我们将$(which qemu-x86_64-static)注册为x86_64 ELF格式的解释器，我们就可以直接运行：
+```
+a-x86-64-elf-binary
+```
+这对于跨架构容器尤为重要，因为这样就可以直接执行命令了。
+## 挂载binfmt_misc接口:
+内核默认是不会挂载它的接口的，需要手动挂载这个不知为何被设置为单独一种fs的接口：
 ```C
 mount("binfmt_misc", "/proc/sys/fs/binfmt_misc", "binfmt_misc", 0, NULL);
 ```
-然后是它的注册方式：
+当然如果你用的是shell命令：
+```
+mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc
+```
+## 注册一个文件格式：
 向`/proc/sys/fs/binfmt_misc/register`写入如下数据：
 ```
 :name:type:offset:magic:mask:interpreter:flags
 ```
-其中name是名称，magic和mask是ELF二进制的特征，interpreter对应qemu的路径。
-写成C语言：
-```C
-static void setup_binfmt_misc(const char *cross_arch, const char *qemu_path)
-{
-        // Get elf magic header.
-        struct MAGIC *magic = get_magic(cross_arch);
-        char buf[1024] = { '\0' };
-        // Format: ":name:type:offset:magic:mask:interpreter:flags".
-        sprintf(buf, ":%s%s:M:0:%s:%s:%s:OC", "ruri-", cross_arch, magic->magic, magic->mask, qemu_path);
-        // Just to make clang-tidy happy.
-        free(magic);
-        // This needs CONFIG_BINFMT_MISC enabled in your kernel.
-        int register_fd = open("/proc/sys/fs/binfmt_misc/register", O_WRONLY | O_CLOEXEC);
-        if (register_fd < 0) {
-                error("\033[31mError: Failed to setup binfmt_misc, check your kernel config QwQ");
-        }
-        // Set binfmt_misc config.
-        write(register_fd, buf, strlen(buf));
-}
+其中各项字段的含义：
 ```
+name：名字随便取，不能重复，在注册后binfmt_misc文件系统下会出现同名的文件
+type：如何识别文件类型，E是基于扩展名，M是基于文件头的magic number
+offset：在M模式时，magic number的偏移量
+magic：M格式下表示文件格式的magic number，E模式表示扩展名
+mask：掩码，用于与magic进行&运算
+interpeter：解释器，用绝对路径，chroot(2)后要用容器里的绝对路径
+flags：P保留原始argv[0]，O咱看不懂，C包含文件权限，F在容器里用，立即打开文件
+```
+## 编写代码：
+好了我们已经充分了解了binfmt_misc的配置与使用，是时候开始写代码了：
+首先我们需要各种ELF的magic和mask信息（从qemu的配置里可以找到）：
 ```C
 /* ELF magic header and mask for binfmt_misc & QEMU. */
 #define aarch64_magic        "\\x7f\\x45\\x4c\\x46\\x02\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\xb7\\x00"
@@ -110,6 +119,9 @@ static void setup_binfmt_misc(const char *cross_arch, const char *qemu_path)
 #define x86_64_mask          "\\xff\\xff\\xff\\xff\\xff\\xfe\\xfe\\xfc\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfe\\xff\\xff\\xff"
 #define xtensa_mask          "\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfe\\xff\\xff\\xff"
 #define xtensaeb_mask        "\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfe\\xff\\xff"
+```
+然后是数据结构，基本是一目了然：
+```C
 // For get_magic().
 #define magicof(x) (x##_magic)
 #define maskof(x) (x##_mask)
@@ -118,6 +130,7 @@ struct MAGIC {
 	char *mask;
 };
 ```
+然后我们需要一个函数让magic/mask和char *格式的cross_arch对应：
 ```C
 // Get ELF magic number and mask for cross_arch specified.
 struct MAGIC *get_magic(const char *cross_arch)
@@ -222,4 +235,26 @@ struct MAGIC *get_magic(const char *cross_arch)
 	return ret;
 }
 ```
+最后是binfmt_misc的注册：
+```C
+static void setup_binfmt_misc(const char *cross_arch, const char *qemu_path)
+{
+        // Get elf magic header.
+        struct MAGIC *magic = get_magic(cross_arch);
+        char buf[1024] = { '\0' };
+        // Format: ":name:type:offset:magic:mask:interpreter:flags".
+        sprintf(buf, ":%s%s:M:0:%s:%s:%s:PCF", "ruri-", cross_arch, magic->magic, magic->mask, qemu_path);
+        // Just to make clang-tidy happy.
+        free(magic);
+        // This needs CONFIG_BINFMT_MISC enabled in your kernel.
+        int register_fd = open("/proc/sys/fs/binfmt_misc/register", O_WRONLY | O_CLOEXEC);
+        if (register_fd < 0) {
+                error("\033[31mError: Failed to setup binfmt_misc, check your kernel config QwQ");
+        }
+        // Set binfmt_misc config.
+        write(register_fd, buf, strlen(buf));
+}
+```
 可以看到非常简单。
+## 后记：
+后继就是没有后继，散会喵！
