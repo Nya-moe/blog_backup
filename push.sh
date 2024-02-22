@@ -1,6 +1,7 @@
 #!/bin/bash
 BK_REPO=../blog_backup
 BLOG_DIR=$(pwd)
+rm -rvf ${BK_REPO}/*
 cp -rv ./public ${BK_REPO}/
 cp -rv ./source ${BK_REPO}/
 cp -v ./_config.yml ${BK_REPO}/
