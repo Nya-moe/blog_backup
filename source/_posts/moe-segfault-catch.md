@@ -1,8 +1,8 @@
 ---
 title: 论如何在Segmentation fault时优雅地结束程序
 date: 2024-01-30 14:26:59
-cover: /img/gnu.jpg
-top_img: /img/gnu.jpg
+cover: /img/moe-segfault.jpg
+top_img: /img/moe-segfault.jpg
 tags:
   - Linux
   - C语言
