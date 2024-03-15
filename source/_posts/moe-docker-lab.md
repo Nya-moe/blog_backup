@@ -9,7 +9,7 @@ tags:
 cover: /img/docker-lab.jpg
 top_img: /img/docker-lab.jpg
 ---
-本篇文章，你将会学习如何为自己的手机开启docker支持，包含一些小技巧和docker基本异常处理，期待你的成果喵～      
+注意：文章所述方法仅适用于非GKI或qgki的设备，新设备咱也不会搞。
 文章内所述手机为arm64架构，上古时期的32位架构请自行修改。      
 注：pixel系列设备请换用repo工具以及官方构建工具并使用ThinLTO（在内存小于32G的设备上）。      
 好了让我们开始吧喵！      
@@ -18,7 +18,7 @@ top_img: /img/docker-lab.jpg
 - 手机内核开源，尽量是有大佬维护源码的
 - 拥有一定Linux基础
 
-如果设备或个人不满足以上条件者请自行退出喵！咱是没时间给你解释为什么的。      
+如果设备或个人不满足以上条件者请自行退出喵！      
 ### 前期准备：
 你可能需要准备如下内容：      
 - Linux系统环境(理论上手机电脑均可，电脑最佳)      
@@ -288,3 +288,5 @@ usermod -g aid_inet _apt 2>/dev/null
 # Fix gentoo emerge.
 usermod -a -G aid_inet,aid_net_raw portage 2>/dev/null
 ```
+# 后记：
+没有后记，散会！
