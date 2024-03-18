@@ -45,17 +45,18 @@ taskset -c 0-3 qemu-system-aarch64 \
     -m size=1024M \
     -cpu host -smp 4,sockets=4,cores=1,threads=1\\
     -net user -net nic,model=virtio \
-    -drive format=raw,file=ubuntu.img \
+    -drive format=raw,file=ubuntu.img,if=virtio \
     -kernel linux -initrd initrd \
     -append "root=/dev/vda rw"
 ```
 参数注释版本（不可执行）：
 ```
-#使用cpu的0-3核心，不使用taskset强制绑核会导致只有单核，实测只有小核能成功启动，其他编号不行,会导致cpu跑路。
+#使用cpu的0-3核心，不使用taskset强制绑核会导致只有单核
+#实测k40g只有小核能成功启动，其他编号不行,会导致cpu跑路。
 taskset -c 0-3 qemu-system-aarch64 \
 # 开启虚拟化支持
     -machine virt --enable-kvm \
-# 输出到终端
+# 输出到终端,serial stdio会导致CTRL-C无法正确传入
     -nographic \
 # 内存大小
     -m size=1024M \
@@ -74,4 +75,8 @@ taskset -c 0-3 qemu-system-aarch64 \
 启动后，终端大小是错的，可以执行resize命令重新设置大小，记得将它加入自启脚本：
 ```
 echo "resize > /dev/null" >> ~/.profile
+```
+另外，默认终端不会显示彩色，需要手动将$TERM设置为xterm-256color
+```
+echo "export TERM=xterm-256color" >> ~/.profile
 ```

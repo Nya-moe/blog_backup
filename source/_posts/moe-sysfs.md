@@ -8,7 +8,6 @@ cover: /img/moe-sysfs.png
 top_img: /img/moe-sysfs.png
 ---
 
-迟来的更新喵～
 这篇文章我们来介绍下几个sysfs接口的调用。需要注意的是，由于安卓内核碎片化过于严重，各个厂商之间的代码差异过大，因此直接和内核交互来调用驱动并不是一个通用思路。但是对于某些特定设备的驱动调用却是个简单可行的方法，比如nothing phone的灯带。
 ### 手电筒：
 一般是个led类设备，小米10ultra的手电筒被注册到了/sys/class/leds/flashlight/下，当然也有部分设备叫led0或者其他，nothing的手电筒驱动咱还没找到，咱好笨喵呜～
@@ -18,6 +17,7 @@ brightness的内容是个无符号整形数值，定义了灯的亮度，向其�
 什么你说怎么写？直接重定向覆盖进去就行了。
 ### 呼吸灯：
 和手电筒差不多，一般在/sys/class/leds/white，当然也有彩色呼吸灯，控制文件和手电筒一样。
+k40G就有/sys/class/leds/red，/sys/class/leds/blue和/sys/class/leds/green三个接口来控制背后摄像头上那个中二的很的灯带。
 话说现在很少有带呼吸灯的手机了喵～
 #### nothing phone 1的灯带：
 算是个特大号呼吸灯？

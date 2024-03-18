@@ -6,10 +6,10 @@ tags:
 cover: /img/pong-glyph.jpg
 top_img: /img/pong-glyph.jpg
 ---
-好久不见喵～（怎么又是这个开场白。。。）
 最近整了部Nothing Phone(2)，bl秒解的设定是真的舒服，所以买来第一时间就透了一遍（指root了）。
 然后半夜睡不着，就打算研究一下这个灯带是怎么调用的。
-然后就开始了一段孤独的旅程充满烦恼～
+然后就开始了，
+一段孤独的旅程充满烦恼～
 # 内核源码：
 很不幸，除了知道了灯带型号是aw20036之外没啥收获，原因无他，单纯看不懂代码，注释都不怎么写这不欺负萌新吗。。。
 仓库里相关代码文件甚至具有可执行权限，看来开发者也是和咱一样只知道无脑777的杂鱼呢。
@@ -24,7 +24,7 @@ an utility to perform LED control?
 你倒是说说具体怎么用啊！！！
 # 正式尝试：
 ## 找到接口位置：
-好吧内核源码看不懂，咱来到user-space。
+好吧内核源码看不懂，咱来到user-space（笑）。
 首先find|grep找到sysfs接口在`/sys/bus/i2c/drivers/aw20036_led/0-003a/leds/led_strips/`
 （我不管我就要find配grep！！！）
 我们进去：
@@ -44,7 +44,7 @@ hwen                  vip_notification
 hwid
 ```
 好吧这不是我熟悉的灯带驱动。
-跟一代一点也不一样，或许不是同一个人写的。
+跟一代一点也不一样，或许不是同一个人写的。。。
 ## 尝试调用：
 最后找到的方法不是一般人能想出来的，所以略过。
 比较有意思的是`factory_test`这个文件，看名字用于工厂测试？不记得这灯品控差啊。不过和`all_brightness`作用几乎没太大差距。
@@ -68,9 +68,10 @@ hwid
 .../leds/led_strips # cat /proc/1481/cmdline
 /vendor/bin/hw/vendor.qti.hardware.lights.service
 ```
-看来是和高通py的。。。
-《和高通联合调教的灯带》。。。
-好了直接上strace，去Glyph composer里随便点一下，反正让灯闪一下就是了，得到如下日志：
+看来是和高通py的～
+《和高通联合调教的灯带》
+（所以发布会为啥不吹一吹。。。）
+然后直接上strace，去Glyph composer里随便点一下，反正让灯闪一下就是了，得到如下日志：
 ```c
 .../leds/led_strips # strace -s 114514 -v -p 1481
 strace: Process 1481 attached
