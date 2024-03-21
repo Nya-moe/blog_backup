@@ -30,7 +30,6 @@ clang-format文件需自备。
 ```
 # 实现的功能：
 - 代码优化与加固
-- 多线程编译支持（`make -j$(nproc)`）
 - 静态编译支持
 - 代码静态检测
 - 代码格式化
@@ -51,6 +50,7 @@ clang-format文件需自备。
 # 代码：
 C语言规范默认设置为GNU99，可视情况修改。
 ```Makefile
+.NOTPARALLEL:
 # Premature optimization is the root of evil.
 CCCOLOR     = \033[1;38;2;254;228;208m
 LDCOLOR     = \033[1;38;2;254;228;208m
@@ -116,12 +116,12 @@ CHECKER = clang-tidy --use-color
 # Unused checks are disabled.
 CHECKER_FLAGS = --checks=*,-clang-analyzer-security.insecureAPI.strcpy,-altera-unroll-loops,-cert-err33-c,-concurrency-mt-unsafe,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,-readability-function-cognitive-complexity,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-bugprone-easily-swappable-parameters,-cert-err34-c
 # For LD.
-LD_FLAGS = $(NX) $(RELRO)
-DEV_LD_FLAGS = $(NO_RELRO) $(NO_NX) $(NO_PIE)
+LD_FLAGS = $(NX) $(RELRO) -Wl,--build-id=sha1
+DEV_LD_FLAGS = $(NO_RELRO) $(NO_NX) $(NO_PIE) -Wl,--build-id=sha1
 # Fix issues in termux (with bionic).
 BIONIC_FIX = -ffunction-sections -fdata-sections
 BIONIC_CFLAGS = $(OPTIMIZE_CFLAGS) $(BIONIC_FIX)
-BIONIC_LD_FLAGS = $(LD_FLAGS) -Wl,--gc-sections
+BIONIC_LD_FLAGS = $(LD_FLAGS) -Wl,--gc-sections -Wl,--build-id=sha1
 # Target.
 objects = hello.o
 O = out
