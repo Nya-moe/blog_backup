@@ -95,3 +95,5 @@ __attribute__((constructor))：使函数在main()之前被执行。
 __attribute__((destructor))：使函数在调用之后被执行。
 __attribute__((unused))：函数或变量可能不会使用，可以作为注释用途或抑制编译警告。
 __attribute__((aligned()))：设置结构体对齐属性。
+# 后记：
+(null)

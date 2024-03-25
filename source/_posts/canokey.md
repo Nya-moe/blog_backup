@@ -9,7 +9,28 @@ cover: /img/canokey.jpg
 ---
 前段时间咱本着`再不买以后就买不到了`的心态购入了国产物理密钥Canokey，不得不说这价格是真的坚挺，至死不降那种。。。
 闪烁的蓝灯，优雅的签名，逼格算是拉满了，不过使用过程是真的曲折坎坷。
-咱主要是买来用于git签名与ssh认证的，配置过程前辈们已经写的很清楚了，写好了有奖励，写不好有惩罚（悲），所以咱就不写了，主要写使用OpenPGP Card的过程中遇到的坑。
+咱主要是买来用于git签名与ssh认证的，配置过程前辈们已经写的很清楚了，写好了有奖励，写不好有惩罚（悲），所以咱就不怎么写了，主要写使用OpenPGP Card的过程中遇到的坑。
+# 基本配置：
+## 配置SSH验证：
+1.编辑 ~/.gnupg/gpg-agent.conf，加入：
+```
+enable-ssh-support
+```
+2.
+```
+gpg --list-keys --with-keygrip
+```
+将keygrip写入~/.gnupg/sshcontrol
+3.
+```
+export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+gpgconf --launch gpg-agent
+```
+## git签名：
+```
+git config --global user.signingkey [key]
+git config --global commit.gpgsign true
+```
 # Github提示密钥已存在：
 生成子密钥前咱git提交一直是主密钥签的。
 子密钥生成完后在github添加了好几次都提示密钥已存在，但又不识别我子密钥。
