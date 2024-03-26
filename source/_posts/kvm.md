@@ -4,8 +4,8 @@ date: 2024-03-15 13:01:13
 tags:
   - Linux
   - Termux
-top_img: /img/canokey.jpg
-cover: /img/canokey.jpg
+top_img: /img/kvm.jpg
+cover: /img/kvm.jpg
 ---
 
 最近咱换了k40外观增强版，这一代联发科芯片漏洞不是一般的多，不仅有mtkclient中众所周知的bootrom漏洞，老版本系统lk中的cpu地址还是错的，真是“红米配天玑，越用越懵逼”。不过lk的漏洞导致这手机在miui12.5下是能开kvm的，嗯，不折腾会死星人狂喜。
