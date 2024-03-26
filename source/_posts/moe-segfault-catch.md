@@ -11,10 +11,10 @@ tags:
 glibc下还好，崩了最起码显示个cmdline，bionic就可能啥也没有了。
 于是，虽然咱不希望出问题，最起码出问题时程序走的安详点，不要出现啥信息也没有的“死不瞑目”的场面。
 然后就是捕捉段错误的原理了：
-众所周知，段错误是当前这段错误，程序其他段大概率还是能跑的。在发生段错误时，内核就会给进程发送相应Core信号：这位进程你已经寄了，准备下后事吧喵～
-Core信号有SIGABRT，SIGBUS，SIGFPE，SIGILL，SIGQUIT，SIGSEGV，SIGSYS，SIGTRAP，SIGXCPU和SIGXFSZ这几种，分别对应了不同的异常情况，具体可以看signal(7)。
+众所周知，段错误是当前这段错误，程序其他段大概率还是能跑的。在发生段错误时，内核就会给进程发送相应SIGSEGV信号：这位进程你已经寄了，准备下后事吧喵～
+其它信号如SIGABRT，SIGBUS，SIGFPE，SIGILL，SIGQUIT，SIGSYS，SIGTRAP，SIGXCPU和SIGXFSZ，对应了不同的异常情况，默认行为也是core dump，具体可以看signal(7)。
 事实上这些信号并不是说必须强制终止程序，当然你也可以选择直接忽略，然后内核会不停发送信号，最后就是死循环，核心思想便是“只要我不主动崩溃，我就没有崩溃”的精神胜利(逃)。。。
-收到core信号后，进程是可以选择自己到底要干什么的，默认是按照系统配置生成core dump文件，也可以自定义要执行什么。
+收到相应信号后，进程是可以选择自己到底要干什么的，默认是按照系统配置生成core dump文件，也可以自定义要执行什么。
 既然能自定义，那么我们就简单的写一个在段错误时输出进程基本信息的程序：
 ```C
 #include <signal.h>
@@ -42,16 +42,7 @@ void sighandle(int sig) {
 }
 // Catch coredump signal.
 void register_signal(void) {
-  signal(SIGABRT, sighandle);
-  signal(SIGBUS, sighandle);
-  signal(SIGFPE, sighandle);
-  signal(SIGILL, sighandle);
-  signal(SIGQUIT, sighandle);
   signal(SIGSEGV, sighandle);
-  signal(SIGSYS, sighandle);
-  signal(SIGTRAP, sighandle);
-  signal(SIGXCPU, sighandle);
-  signal(SIGXFSZ, sighandle);
 }
 int main(void) {
   register_signal();
