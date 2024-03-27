@@ -43,7 +43,7 @@ taskset -c 0-3 qemu-system-aarch64 \
     -machine virt --enable-kvm \
     -nographic \
     -m size=1024M \
-    -cpu host -smp 4,sockets=4,cores=1,threads=1\\
+    -cpu host -smp 4 \
     -net user -net nic,model=virtio \
     -drive format=raw,file=ubuntu.img,if=virtio \
     -kernel linux -initrd initrd \
@@ -61,11 +61,11 @@ taskset -c 0-3 qemu-system-aarch64 \
 # 内存大小
     -m size=1024M \
 # 使用宿主CPU，4核心
-    -cpu host -smp 4,sockets=4,cores=1,threads=1\\
+    -cpu host -smp 4 \
 # 设置网络
     -net user -net nic,model=virtio \
 # 系统镜像
-    -drive format=raw,file=ubuntu.img \
+    -drive format=raw,file=ubuntu.img,if=virtio \
 # 内核和initrd
     -kernel linux -initrd initrd \
 # 内核cmdline
