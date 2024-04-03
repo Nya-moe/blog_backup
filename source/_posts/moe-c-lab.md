@@ -35,7 +35,7 @@ clang-tidy xxx.c -- 编译参数
 但是，很多规则不是有用的，比如对strlen.h中函数内存安全的报警就非常多余，甚至clang-tidy会建议使用BSD中的函数替代，对此咱建议还是不要建议了。     
 因此我们需要关闭部分检测项目。      
 使用`--checks=-检测项`来关闭检测项。       
-ruri中默认关闭的检测项：      
+建议关闭的检测项：      
 ```
 --checks=-clang-analyzer-security.insecureAPI.strcpy,-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling 
 ```
