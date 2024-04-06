@@ -39,8 +39,9 @@ C语言唯一的好处就是能直接查man手册，毕竟是Linux正统语言�
 ## Linux挂载点/设备文件：
 众嗦粥汁，Linux下的/proc，/sys与/dev均在开机时由init或其子服务创建，部分系统同时会将/tmp挂载为tmpfs，它们都需要被手动挂载到容器才可保证容器中程序正常运行。     
 其中，/proc为procfs，/sys为sysfs，/dev为tmpfs。      
-你还需要在容器中创建/dev下的设备节点文件。部分文章在创建chroot/unshare容器时都会直接映射宿主机的/dev目录，这是十分危险的，正确的做法是参照docker容器默认创建的设备文件列表去手动创建这些节点。      
-当然了，docker也会将/sys下部分目录挂载为只读，详情可以去看ruri源码或者运行个docker容器看看它的挂载点。      
+你还需要在容器中创建/dev下的设备节点文件。
+部分文章在创建chroot/unshare容器时都会直接映射宿主机的/dev目录，这是十分危险的，正确的做法是参照docker容器默认创建的设备文件列表去手动创建这些节点。      
+当然了，docker也会将/sys下部分目录挂载为只读,ruri借鉴了其挂载点，详情可以去看ruri源码或者运行个docker容器看看它的挂载点。      
 ## 容器注意事项：   
 Android的/data默认为nosuid挂载，/sdcard甚至是noexec，所以在安卓/data下创建容器时请将/data重挂载为suid，不要在/sdcard创建容器。      
 Archlinux的根目录需要在挂载点上，也就是说需要将容器目录自身bind-mount到自身，否则pacman无法运行。      
