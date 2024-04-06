@@ -39,7 +39,7 @@ C语言唯一的好处就是能直接查man手册，毕竟是Linux正统语言�
 ## Linux挂载点/设备文件：
 众嗦粥汁，Linux下的/proc，/sys与/dev均在开机时由init或其子服务创建，部分系统同时会将/tmp挂载为tmpfs，它们都需要被手动挂载到容器才可保证容器中程序正常运行。     
 其中，/proc为procfs，/sys为sysfs，/dev为tmpfs。      
-你还需要在容器中创建/dev下的设备节点文件。部分文章(怕是全部)在创建chroot/unshare容器时都会直接映射宿主机的/dev目录，这是十分危险的，正确的做法是参照docker容器默认创建的设备文件列表去手动创建这些节点。      
+你还需要在容器中创建/dev下的设备节点文件。部分文章在创建chroot/unshare容器时都会直接映射宿主机的/dev目录，这是十分危险的，正确的做法是参照docker容器默认创建的设备文件列表去手动创建这些节点。      
 当然了，docker也会将/sys下部分目录挂载为只读，详情可以去看ruri源码或者运行个docker容器看看它的挂载点。      
 ## 容器注意事项：   
 Android的/data默认为nosuid挂载，/sdcard甚至是noexec，所以在安卓/data下创建容器时请将/data重挂载为suid，不要在/sdcard创建容器。      
@@ -148,7 +148,7 @@ Linux内核自2.4版本引入第一个namespace，即mount ns，当初估计作�
 ### Linux父子进程：
 众所周知(读者：喵喵喵？我怎么不知道？)，Linux下运行的所有进程都是init的子进程，子进程由父进程经fork(2)或clone(2)创建，继承父进程的文件描述符与UID/GID/权限(特权)等。      
 子进程死亡了若父进程没有对其wait(2)或waitpid(2)，则成为僵尸进程。       
-父进程先走一步的话，子进程被init直接接管，毕竟硬给其他进程安个子进程的话人家也不认。     
+父进程先走一步的话，子进程被init直接接管。     
 在pid ns中被执行的第一个进程在该ns中被认为与init等效(具有pid 1)，当其死亡时pid ns被内核销毁，其子进程被一同销毁。      
 ### 函数调用：
 unshare(2)函数来自`sched.h`，需要先`#define _GNU_SOURCE`。      
