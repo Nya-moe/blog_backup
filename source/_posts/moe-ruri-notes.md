@@ -259,11 +259,29 @@ CAP_CHECKPOINT_RESTORE (since Linux 5.9) 调用checkpoint/restore
 ```
 具体哪些capability需要移除那些保留可直接参照docker。      
 ### 函数调用：
-我们只用到`sys/capability.h`中的cap_drop_bound(3)函数即可。      
+说实话这东西有点抽象，理论上只移除CapBnd即可生效,Linux 6.6（Archlinux）下其他值会被一并移除，但KernelSU貌似有Bug导致不检查CapBnd，strace追踪containerd发现它会同时移除CapAmb和清零CapInh。
+首先是CapBnd的移除，使用libcap：
 ```C
 int cap_drop_bound(cap_value_t cap);
 ```
 cap值是上面讲到的宏。
+CapAmb的移除需要prctl(2):
+```C
+prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_LOWER, cap, 0, 0);
+```
+最后是CapInh的清除：
+```C
+// Clear CapInh.
+cap_user_header_t hrdp = (cap_user_header_t)malloc(sizeof(typeof(*hrdp)));
+cap_user_data_t datap = (cap_user_data_t)malloc(sizeof(typeof(*datap)));
+syscall(SYS_capget, hrdp, datap);
+datap->inheritable = 0;
+syscall(SYS_capset, hrdp, datap);
+free(hrdp);
+free(datap);
+```
+这段着实有点抽象，hrdp和datap事实上是两个指针，需要typeof()后获取它的数据类型。
+不愧是GNU的代码，不用扩展还没法写。
 ## seccomp(2)与libseccomp
 Secommp (SECure COMPuting，安全计算模式)，自Linux 2.6.12被引入，用于对进程的系统调用进行限制，个人理解为：      
 在启用了Seccomp的设备上：      
