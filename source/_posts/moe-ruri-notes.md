@@ -273,16 +273,15 @@ prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_LOWER, cap, 0, 0);
 最后是CapInh的清除：
 ```C
 // Clear CapInh.
-cap_user_header_t hrdp = (cap_user_header_t)malloc(sizeof(typeof(*hrdp)));
-cap_user_data_t datap = (cap_user_data_t)malloc(sizeof(typeof(*datap)));
+cap_user_header_t hrdp = (cap_user_header_t)malloc(sizeof *hrdp);
+cap_user_data_t datap = (cap_user_data_t)malloc(sizeof *datap);
 syscall(SYS_capget, hrdp, datap);
 datap->inheritable = 0;
 syscall(SYS_capset, hrdp, datap);
 free(hrdp);
 free(datap);
 ```
-这段着实有点抽象，hrdp和datap事实上是两个指针，需要typeof()后获取它的数据类型。
-不愧是GNU的代码，不用扩展还没法写。
+这段着实有点抽象，hrdp和datap事实上是两个指针。
 ## seccomp(2)与libseccomp
 Secommp (SECure COMPuting，安全计算模式)，自Linux 2.6.12被引入，用于对进程的系统调用进行限制，个人理解为：      
 在启用了Seccomp的设备上：      
