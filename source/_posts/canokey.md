@@ -12,16 +12,16 @@ cover: /img/canokey.jpg
 咱主要是买来用于git签名与ssh认证的，配置过程前辈们已经写的很清楚了，写好了有奖励，写不好有惩罚（悲），所以咱就不怎么写了，主要写使用OpenPGP Card的过程中遇到的坑。
 # 基本配置：
 ## 配置SSH验证：
-1.编辑 ~/.gnupg/gpg-agent.conf，加入：
+编辑 ~/.gnupg/gpg-agent.conf，加入：
 ```
 enable-ssh-support
 ```
-2.
+然后：
 ```
 gpg --list-keys --with-keygrip
 ```
 将keygrip写入~/.gnupg/sshcontrol
-3.
+然后：
 ```
 export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
 gpgconf --launch gpg-agent
@@ -45,6 +45,16 @@ https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x5f3d5c278995c790
 写入：
 SUBSYSTEM=="usb", ATTR{manufacturer}=="canokeys.org", GROUP="moe-hacker"
 由于咱电脑只有咱一个用户，所以干脆不新建group了，小朋友千万不要学，不严谨，会被带坏的。
+# wsl1 使用：
+你需要一个win-gpg-agent。
+然后把windows的gpg-agent连接到wsl
+```sh
+rm /root/.gnupg/S.gpg-agent
+socat UNIX-LISTEN:/root/.gnupg/S.gpg-agent,fork UNIX-CONNECT:/mnt/c/Users/moe-h/AppData/Local/gnupg/agent-gui/S.gpg-agent &
+rm /root/.gnupg/S.gpg-agent.ssh
+socat UNIX-LISTEN:/root/.gnupg/S.gpg-agent.ssh,fork UNIX-CONNECT:/mnt/c/Users/moe-h/AppData/Local/gnupg/agent-gui/S.gpg-agent.ssh &
+```
+moe-h是咱的用户名，辣鸡M$用户名是错的。
 # Termux中使用：
 需要安装scdaemon这个包。termux下的读取就算在root用户下也不是多很稳定，so f**k u android !
 如果你的安卓版本够低，可以试试termux-usb。
