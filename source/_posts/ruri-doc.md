@@ -21,9 +21,9 @@ git clone https://github.com/Moe-hacker/ruri
 编译：
 ```
 cd ruri
-make static
+./configure -s
+make
 ```
-对于Termux，需要将`make static`换为`make static-bionic`，so f u android ！
 于是你得到了一个名叫ruri的二进制。请将它复制到您的$PATH所包含的目录中。
 # 使用：
 首先你需要一个rootfs，这是基础。
@@ -81,6 +81,8 @@ sudo ruri -m ./rootfs.img / ./test
 ```
 sudo ruri -a [容器架构] -q /qemu-user-xxxx  ./test
 ```
+# Cgroup限制：
+ruri自3.1起支持cgroup的cpuset和memory限制，可以用`-l cpuset=0-3`限制只能使用CPU 0-3，或`-l memory=1024M`限制内存只能使用1024M这样。此特性需要内核支持相应cgroup。
 # 配置文件：
 从3.0版本开始，ruri取消了daemon支持，换为配置文件支持。
 配置文件有两种：

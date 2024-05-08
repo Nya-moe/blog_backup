@@ -9,32 +9,9 @@ tags:
 - Container
 ---
 # 前言：
-ruri刚发了rc1，之前一直咕咕咕着的开发笔记差不多也该写写了喵～        
-笔记主要讲容器及安全原理，附带一点C语言。      
-头图是项目最早的版本，真是怀念呢喵，那时候咱连数组都不会用，现在ruri代码都突破3k行了。      
-## 关于使用C语言：
-说实话虽然个人很喜欢C语言，但是并不太建议新手用C，go/rust相比起来学习成本以及易用性相较于C均有很大提升。      
-C语言唯一的好处就是能直接查man手册，毕竟是Linux正统语言。      
-使用C语言，您可能除了学习C之外，还需要掌握如下工具：
-- clang-tidy静态检测工具
-- clang-format格式化工具
-- GDB调试工具
-- ASAN内存检测工具 
-- GNUMake用于配置项目构建过程   
-   
-至于学习C语言的心得嘛，        
-```
-陷入无法察觉的overflow
-沦落于oom-killer之下的死尸
-就连无法看懂的魔数
-也错以为是莫名能跑的奇迹
-被泄漏的内存所填满
-内核惶恐
-逐渐失去的可维护性
-终于咕咕而终
-「bug还在↗↘↗↘↗↘↗➔➔↘↘」       
-```
-~~（高速退学）~~
+ruriv2.0刚发了rc1（现在是3.1-rc1了都），之前一直咕咕咕着的开发笔记差不多也该写写了喵～        
+笔记主要讲容器及安全原理，使用C语言实现。      
+头图是项目最早的版本，真是怀念呢喵，那时候咱连数组都不会用，现在ruri代码都突破4k行了。      
 # 容器基本原理：
 ## Linux挂载点/设备文件：
 众嗦粥汁，Linux下的/proc，/sys与/dev均在开机时由init或其子服务创建，部分系统同时会将/tmp挂载为tmpfs，它们都需要被手动挂载到容器才可保证容器中程序正常运行。     
@@ -42,9 +19,16 @@ C语言唯一的好处就是能直接查man手册，毕竟是Linux正统语言�
 你还需要在容器中创建/dev下的设备节点文件。
 部分文章在创建chroot/unshare容器时都会直接映射宿主机的/dev目录，这是十分危险的，正确的做法是参照docker容器默认创建的设备文件列表去手动创建这些节点。      
 当然了，docker也会将/sys下部分目录挂载为只读,ruri借鉴了其挂载点，详情可以去看ruri源码或者运行个docker容器看看它的挂载点。      
-## 容器注意事项：   
+需要注意的是，只读挂载需要先bind-mount再remount-ro，示例写法如下：      
+```C
+// Bind-mount.
+mount(source, target, NULL, mountflags | MS_BIND, NULL);
+// Remount.
+mount(source, target, NULL, mountflags | MS_BIND | MS_REMOUNT, NULL);
+```
+## 其他容器注意事项：   
 Android的/data默认为nosuid挂载，/sdcard甚至是noexec，所以在安卓/data下创建容器时请将/data重挂载为suid，不要在/sdcard创建容器。      
-Archlinux的根目录需要在挂载点上，也就是说需要将容器目录自身bind-mount到自身，否则pacman无法运行。      
+Archlinux的根目录需要在挂载点上，也就是说需要将容器目录自身bind-mount到自身再进行chroot(2)，否则pacman无法运行。      
 /proc/mounts到/etc/mtab的链接可能需要手动创建。     
 大部分rootfs的resolv.conf为空需手动创建，安卓系统内容器联网需手动设置，授予需要联网的网络用户组(aid_inet,aid_net_raw)权限。      
 ## chroot(2):
@@ -146,6 +130,7 @@ chroot实现了根目录隔离，但是chroot()后的进程会继承父进程特
 因此不要将chroot容器用于生产，老老实实地pull个docker image吧还是。
 ## unshare(2):
 Linux内核自2.4版本引入第一个namespace，即mount ns，当初估计作者没打算再加其他隔离就命名为CLONE_NEWNS了，此宏定义一直被沿用至今。      
+（Linus：我们不破坏用户空间）      
 ### Linux父子进程：
 众所周知(读者：喵喵喵？我怎么不知道？)，Linux下运行的所有进程都是init的子进程，子进程由父进程经fork(2)或clone(2)创建，继承父进程的文件描述符与UID/GID/权限(特权)等。      
 子进程死亡了若父进程没有对其wait(2)或waitpid(2)，则成为僵尸进程。       
@@ -260,7 +245,8 @@ CAP_CHECKPOINT_RESTORE (since Linux 5.9) 调用checkpoint/restore
 ```
 具体哪些capability需要移除那些保留可直接参照docker。      
 ### 函数调用：
-说实话这东西有点抽象，理论上只移除CapBnd即可生效,Linux 6.6（Archlinux）下其他值会被一并移除，但KernelSU貌似有Bug导致不检查CapBnd，strace追踪containerd发现它会同时移除CapAmb和清零CapInh。
+说实话这东西有点抽象，理论上只移除CapBnd即可生效，Linux 6.6（Archlinux）下其他值会被一并移除，但KernelSU貌似有Bug导致不检查CapBnd。
+咱strace追踪了containerd的调用，发现它会同时移除CapAmb和清零CapInh。
 首先是CapBnd的移除，使用libcap：
 ```C
 int cap_drop_bound(cap_value_t cap);
@@ -275,6 +261,8 @@ prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_LOWER, cap, 0, 0);
 // Clear CapInh.
 cap_user_header_t hrdp = (cap_user_header_t)malloc(sizeof *hrdp);
 cap_user_data_t datap = (cap_user_data_t)malloc(sizeof *datap);
+hrdp->pid = getpid();
+hrdp->version = _LINUX_CAPABILITY_VERSION_3;
 syscall(SYS_capget, hrdp, datap);
 datap->inheritable = 0;
 syscall(SYS_capset, hrdp, datap);
@@ -292,10 +280,10 @@ Filter mode:BPF过滤器模式，对白名单外的系统调用进行过滤。
 ### 函数调用：
 用到`seccomp.h`中的函数来开启bpf模式，完整操作过程为：
 ```C
-// 初始化规则
-scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_KILL);
-// 添加白名单
-seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(系统调用), 0);
+// 初始化规则，ruri自3.1起使用黑名单，因为白名单咱也不会写23333
+scmp_filter_ctx ctx = seccomp_init(SCMP_ACT_ALLOW);
+// 添加黑名单
+seccomp_rule_add(ctx, SCMP_ACT_KILL, SCMP_SYS(系统调用), 0);
 // ......
 // ......
 // 关闭默认NO_NEW_PRIV位
