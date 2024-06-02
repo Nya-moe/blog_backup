@@ -130,7 +130,7 @@ chroot实现了根目录隔离，但是chroot()后的进程会继承父进程特
 因此不要将chroot容器用于生产，老老实实地pull个docker image吧还是。
 ## unshare(2):
 Linux内核自2.4版本引入第一个namespace，即mount ns，当初估计作者没打算再加其他隔离就命名为CLONE_NEWNS了，此宏定义一直被沿用至今。      
-（Linus：我们不破坏用户空间）      
+（Linus：我们不破坏用户空间23333）      
 ### Linux父子进程：
 众所周知(读者：喵喵喵？我怎么不知道？)，Linux下运行的所有进程都是init的子进程，子进程由父进程经fork(2)或clone(2)创建，继承父进程的文件描述符与UID/GID/权限(特权)等。      
 子进程死亡了若父进程没有对其wait(2)或waitpid(2)，则成为僵尸进程。       
@@ -189,12 +189,76 @@ pid_t init_unshare_container(bool no_warnings)
 ```
 ### 安全性：
 即使在ns全开的设备中，unshare()后容器中的进程中的root权限依然等于宿主系统中的root权限，因此最简单的攻击方式便是直接修改磁盘中的文件，当然也有其它逃逸方式可进行攻击，于是来到我们的下一节，容器安全。
+## Rootless容器：
+这部分咱研究不深，简单讲讲Rootless容器的创建过程（su等命令实测在容器中无法执行）。
+首先我们需要CLONE_NEWUSER创建一个user ns。
+然后，为了使用mount(2),我们还需要CLONE_NEWNS来成为当前mount ns的所有者。
+最后，为了挂载procfs，我们需要CLONE_NEWPID，很怪，但实测没有这个不行。
+然后我们设置uidmap和gidmap：
+```C
+uid_t uid = geteuid();
+gid_t gid = getegid();
+// Set uid map.
+char uid_map[32] = { "\0" };
+sprintf(uid_map, "0 %d 1\n", uid);
+int uidmap_fd = open("/proc/self/uid_map", O_RDWR | O_CLOEXEC);
+write(uidmap_fd, uid_map, strlen(uid_map));
+close(uidmap_fd);
+// Set gid map.
+int setgroups_fd = open("/proc/self/setgroups", O_RDWR | O_CLOEXEC);
+write(setgroups_fd, "deny", 5);
+close(setgroups_fd);
+char gid_map[32] = { "\0" };
+sprintf(gid_map, "0 %d 1\n", gid);
+int gidmap_fd = open("/proc/self/gid_map", O_RDWR | O_CLOEXEC);
+write(gidmap_fd, gid_map, strlen(gid_map));
+close(gidmap_fd);
+// Maybe needless.
+setuid(0);
+setgid(0);
+```
+最后我们将宿主机的sysfs挂载上：
+```C
+mount("/sys", "./sys", NULL, MS_BIND | MS_REC, NULL);
+```
+然后是procfs：
+```C
+mount("proc", "./proc", "proc", MS_NOSUID | MS_NOEXEC | MS_NODEV, NULL);
+```
+最后，/dev下的设备需要手动从宿主机映射：
+```C
+open("./dev/tty", O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, S_IRUSR | S_IWUSR | S_IROTH | S_IWOTH | S_IRGRP | S_IWGRP);
+mount("/dev/tty", "./dev/tty", NULL, MS_BIND, NULL);
+```
+就可以正常chroot(2)了，还是很简单的。
+## Cgroup：
+cgroup即control group，用于限制进程资源。
+目前ruri只支持cpuset和memory这两个cgroup。
+首先我们需要挂载cgroup的apifs：
+对于cgroup v1：
+```C
+mkdir("/sys/fs/cgroup", S_IRUSR | S_IWUSR);
+// Mount /sys/fs/cgroup as tmpfs.
+mount("tmpfs", "/sys/fs/cgroup", "tmpfs", MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME, NULL);
+// We only need cpuset and memory cgroup.
+mkdir("/sys/fs/cgroup/memory", S_IRUSR | S_IWUSR);
+mkdir("/sys/fs/cgroup/cpuset", S_IRUSR | S_IWUSR);
+mount("none", "/sys/fs/cgroup/memory", "cgroup", MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME, "memory");
+mount("none", "/sys/fs/cgroup/cpuset", "cgroup", MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME, "cpuset");
+```
+而对于v2:
+```C
+mkdir("/sys/fs/cgroup", S_IRUSR | S_IWUSR);
+mount("none", "/sys/fs/cgroup", "cgroup2", MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME, NULL);
+```
+最后，我们在cgroup目录下创建子cgroup，将进程自身加入cgroup.procs然后设置相关限制即可生效。
+这部分不细讲了，因为ruri也只是对于cpuset和memory限制简单实现了下。      
 # 容器安全：
 ## 进程属性查看：
 ```
 cat /proc/$$/status
 ```
-CapEff表示当前进程capabilities，使用`capsh --decode=xxxxx`来解码。      
+CapEff等表示当前进程capabilities，使用`capsh --decode=xxxxx`来解码。      
 NoNewPrivs，Seccomp和Seccomp_filters后面会讲。      
 ## capabilities(7)与libcap(3):
 从2.2版本开始，Linux内核将进程root特权分割为可独立控制的部分，称之为capability，capability是线程属性(per-thread attribute)，可从父进程继承。      
