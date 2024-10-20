@@ -12,8 +12,7 @@ tags:
 ```diff
  17 files changed, 562 insertions(+), 60 deletions(-)
 ```
-可以看到修改并不多，嗯。
-实际上很多修改并不涉及核心内容的（心虚）
+可以看到修改并不多，嗯。（心虚）
 好了我们还是来讲讲binfmt_misc的应用吧：
 ## 简介：
 binfmt_misc是一个内核级别的除对标准同架构ELF以及#!开头的脚本外的可执行文件进行exec(2)的支持，需要内核开启CONFIG_BINFMT_MISC。

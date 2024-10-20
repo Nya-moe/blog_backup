@@ -7,13 +7,14 @@ tags:
 top_img: /img/canokey.jpg
 cover: /img/canokey.jpg
 ---
-在开发C语言项目的构建系统部分时，单用Makefile可能会出现很多难题：
+我们在开发C语言项目的构建系统部分时，单用Makefile可能会出现很多难题：
 我想使用一个CFLAG来提高安全性，可有些编译器不支持怎么办？
 我想用的头文件不同平台有不同版本怎么办？
 我想在编译前检查依赖库怎么办？
 老实说，一个build.sh或许是个很好的选择。
-或者你会说，为啥不用meson/CMake？因为咱是传统派。
-对于这个问题，GNU项目一般都用configure来生成项目配置，但咱懒得学autotools的用法，于是我们这篇文章的主题是：使用最原始的方法手写一个configure脚本。
+或者你会说，为啥不用meson/CMake？因为咱是传统派23333
+GNU项目一般都用configure来生成项目配置，但咱懒得学autotools的用法，于是我们这篇文章的主题是：
+使用最原始的方法手写一个configure脚本！！！！
 # 成品展示：
 ## 输出：
 ```
@@ -164,3 +165,6 @@ if command -v git >/dev/null; then
 fi
 ```
 这会让编译器定义一个RURI_COMMIT_ID宏，值是最后的git commit id。
+
+# 后记：
+懒得写了，散会！
