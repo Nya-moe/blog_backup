@@ -1,8 +1,8 @@
 ---
 title: Clang/GCC安全编译与代码优化选项（合集）
 date: 2023-12-29 16:09:31
-cover: /img/harden.png
-top_img: /img/harden.png
+cover: /img/harden.jpg
+top_img: /img/harden.jpg
 tags:
   - Linux
   - C语言

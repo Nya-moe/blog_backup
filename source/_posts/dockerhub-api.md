@@ -5,8 +5,8 @@ tags:
   - Linux
   - Container
   - Docker
-top_img: /img/canokey.jpg
-cover: /img/canokey.jpg
+top_img: /img/dockerhub.jpg
+cover: /img/dockerhub.jpg
 ---
 # 成品：
 https://github.com/Moe-hacker/docker_image_puller

@@ -4,8 +4,8 @@ date: 2024-10-03 14:59:11
 tags:
   - Linux
   - C语言
-top_img: /img/canokey.jpg
-cover: /img/canokey.jpg
+top_img: /img/configure.jpg
+cover: /img/configure.jpg
 ---
 我们在开发C语言项目的构建系统部分时，单用Makefile可能会出现很多难题：
 我想使用一个CFLAG来提高安全性，可有些编译器不支持怎么办？
