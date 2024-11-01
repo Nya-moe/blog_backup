@@ -10,6 +10,49 @@ cover: /img/c-hacking.jpg
 很显然，这些写法大多并不规范，也不被提倡。
 很显然，咱并没有在windows下试过这些代码，而且实测大部分在线编程网站用的是Linux，可以接受GNU C扩展支持。
 ~~如果有人问我为什么折腾，为什么以折腾这些无聊的东西作为目标，那他们完全可以问，为什么要登上最高峰？为什么人类要登月？………我选择去折腾，我，选择去折腾！~~（逃）
+# 对指针解引用：
+C语言提供方便的指针解引用，于是：
+```C
+if (strchr(p, ';') == NULL) {
+		*strchr(p, '\n') = '\0';
+	} else {
+		*strchr(p, ';') = '\0';
+}
+```
+由于strchr()返回的是在原字符串指针中的地址，因此只要p是可写的，就可以直接赋值strchr指向的位置。
+编译器同意，编写者同意，而且能跑，皆大欢喜。
+# 位运算达到同时成立/不成立：
+使用p^q可以判断p和q是否同时成立或不成立，ruri中`-a`和`-q`需要同时设置，判断是这么写的：
+```C
+if ((container->cross_arch == NULL) ^ (container->qemu_path == NULL)) {
+		error("{red}Error: --arch and --qemu-path should be set at the same time QwQ\n");
+}
+```
+# `截断`的指针:
+在rurima中，subcommand函数被设计为和main一样拥有两个参数`int argc, char **argv`,
+在main函数中解析command，解析到subcommand后把subcommand参数直接传给相关函数，是这么写的：
+```C
+void lxc(int argc, char **_Nonnull argv);
+else if (strcmp(argv[i], "lxc") == 0) {
+			if (i + 1 >= argc) {
+				error("{red}No subcommand specified!\n");
+			}
+			lxc(argc - i - 1, &argv[i + 1]);
+			return 0;
+} 
+```
+# 三级指针控制数组：
+在函数外面：
+```C
+char **array=NULL;
+```
+函数参数`char ***_Nullable array`
+函数内部：
+```C
+(*array) = malloc(sizeof(char *));
+(*array)[0] = NULL;
+```
+这样就可以改变数组指向的内存，于是可以用realloc新增数组成员，达到内存动态分配
 # 对int值进行位运算：
 我们知道，int值以二进制存储。
 于是可以用位运算来乘除2的次方数。
