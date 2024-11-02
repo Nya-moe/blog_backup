@@ -187,10 +187,34 @@ pid_t init_unshare_container(bool no_warnings)
   return unshare_pid;
 }
 ```
+### setns(2)：
+在容器已经运行后，我们可以使用setns()加入容器的namespace，用法如下：
+首先我们知道容器的ns所有者pid（ns_pid）,然后：
+open()打开`/proc/{ns_pid}/ns/{namespace}`,获取ns_fd, 其中namespace是想加入的ns名称，
+获取到ns_fd后，`setns(ns_fd,0);`即可。
+注意：mount ns应该始终最后一个被加入，因为加入后/proc下的内容在开启pid ns的情况下会变化导致无法setns(2)。
 ### 安全性：
 即使在ns全开的设备中，unshare()后容器中的进程中的root权限依然等于宿主系统中的root权限，因此最简单的攻击方式便是直接修改磁盘中的文件，当然也有其它逃逸方式可进行攻击。
+## pivot_root(2):
+pivot_root()类似于chroot(),但更加安全，它的原理是更改当前mount ns的根目录，并将原根目录移动到新的目录。      
+ruri v3.7正式为unshare容器启用pivot_root替代chroot。      
+他的使用方式如下：
+首先我们需要一个mount ns，可以`unshare(CLONE_NEWNS)`后fork()一下自己。
+在mount ns的所有者进程中，可以这样使用pivot_root:
+```C
+// 切换到容器目录
+chdir(container_dir);
+// 运行pivot_root
+syscall(SYS_pivot_root,".",".");
+// 切换到根目录
+chdir("/");
+// 取消原root的挂载
+umount2(".",MNT_DETACH);
+```
+
+在非ns所有者进程中，我们可以通过setns(2)加入已经运行过pivot_root的mount namespace, 然后直接`chdir("/")`即可。
 ## Rootless容器：
-这部分咱研究不深，简单讲讲Rootless容器的创建过程（su等命令实测在容器中无法执行）。
+建议配合咱的另一篇文章阅读：[rootless容器开发指北](https://blog.crack.moe/2024/10/31/rootless-container/)      
 首先我们需要CLONE_NEWUSER创建一个user ns。
 然后，为了使用mount(2),我们还需要CLONE_NEWNS来成为当前mount ns的所有者。
 最后，为了挂载procfs，我们需要CLONE_NEWPID，很怪，但实测没有这个不行。
