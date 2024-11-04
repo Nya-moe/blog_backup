@@ -128,7 +128,7 @@ chroot实现了根目录隔离，但是chroot()后的进程会继承父进程特
 - 当场逃逸出容器
 ### 逃逸：
 在/proc被挂载的chroot容器中，可能可以通过`chroot /proc/1/root`直接逃逸出容器，可行的解决方式是开启PID NS来避免这一问题。     
-实测wsl1有此逃逸漏洞，不确定Linux是否已经修复。        
+实测wsl1有此逃逸漏洞，wsl2的Linux内核已经修复。        
 因此不要将chroot容器用于生产，老老实实地pull个docker image吧还是。
 ## unshare(2):
 Linux内核自2.4版本引入第一个namespace，即mount ns，当初估计作者没打算再加其他隔离就命名为CLONE_NEWNS了，此宏定义一直被沿用至今。      
