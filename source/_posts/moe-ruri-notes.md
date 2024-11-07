@@ -350,7 +350,7 @@ prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_LOWER, cap, 0, 0);
 ```C
 // Clear CapInh.
 cap_user_header_t hrdp = (cap_user_header_t)malloc(sizeof *hrdp);
-cap_user_data_t datap = (cap_user_data_t)malloc(sizeof *datap);
+cap_user_data_t datap = (cap_user_data_t)malloc((sizeof *datap) * 10);
 hrdp->pid = getpid();
 hrdp->version = _LINUX_CAPABILITY_VERSION_3;
 syscall(SYS_capget, hrdp, datap);
@@ -359,7 +359,7 @@ syscall(SYS_capset, hrdp, datap);
 free(hrdp);
 free(datap);
 ```
-这段着实有点抽象，hrdp和datap事实上是两个指针。
+这段着实有点抽象，hrdp和datap事实上是两个指针，datap需要是一个数组，实测只分配一个datap大小的内存会崩。
 ## seccomp(2)与libseccomp
 Secommp (SECure COMPuting，安全计算模式)，自Linux 2.6.12被引入，用于对进程的系统调用进行限制，个人理解为：      
 在启用了Seccomp的设备上：      
