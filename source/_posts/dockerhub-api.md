@@ -36,6 +36,8 @@ def get_host_arch():
         arch = "arm64"
     return arch
 ```
+# 关于image字段：
+除了docker search的实现之外，其他如果不带repo前缀的默认需要在image字段加入library/前缀，比如ubuntu镜像的image字段应该是library/ubuntu。
 # 镜像查找：
 首先是镜像的查找，也就是docker search的实现。
 这个接口十分简单，需要两个参数：要查找的字段(image)和获取内容的条数(page_size)。
@@ -81,13 +83,13 @@ ubuntu [official]
 ```
 然后是tag的查找，这个API和上面差不多, 给出镜像名image和数据条数page_size：
 ```python
-    response = requests.get("https://hub.docker.com/v2/repositories/library/" + image + "/tags/?page_size=" + str(page_size))
+    response = requests.get("https://hub.docker.com/v2/repositories/" + image + "/tags/?page_size=" + str(page_size))
 ```
-设image="ubuntu", page_size=1, 在response.text中你会获得一段这样的json：
+设image="library/ubuntu", page_size=1, 在response.text中你会获得一段这样的json：
 ```json
 {
     "count": 644,
-    "next": "https://hub.docker.com/v2/repositories/library/ubuntu/tags/?page=2\u0026page_size=1",
+    "next": "https://hub.docker.com/v2/repositories/ubuntu/tags/?page=2\u0026page_size=1",
     "previous": null,
     "results": [
         {
@@ -216,7 +218,7 @@ ubuntu [official]
 我们只需要提供镜像名image，就是上面docker search出来的那个名字
 ```python
     response = requests.get(
-        "https://auth.docker.io/token?service=registry.docker.io&scope=repository%3Alibrary%2F" + image +
+        "https://auth.docker.io/token?service=registry.docker.io&scope=repository%3A" + image +
         "%3Apull")
 ```
 我们会获得这样一段json：
@@ -238,13 +240,13 @@ ubuntu [official]
 然后我们开始获取镜像。
 首先获得镜像image标签tag对应的信息,这一步需要token：
 ```python
-    response = requests.get("https://registry-1.docker.io/v2/library/" + image + "/manifests/" + tag,
+    response = requests.get("https://registry-1.docker.io/v2/" + image + "/manifests/" + tag,
                             headers={
                                 "Authorization": "Bearer " + token,
                                 "Accept": "application/vnd.docker.distribution.manifest.list.v2+json"
                             })
 ```
-image="ubuntu",tag="latest"你将获得如下json：
+image="library/ubuntu",tag="latest"你将获得如下json：
 ```json
 {
     "manifests": [
@@ -321,7 +323,7 @@ image="ubuntu",tag="latest"你将获得如下json：
 ```
 最后我们解析这个digest，获得最终要下载的文件, 需要image，digest和token：
 ```python
-response = requests.get("https://registry-1.docker.io/v2/library/" + image + "/manifests/" + digest,
+response = requests.get("https://registry-1.docker.io/v2/" + image + "/manifests/" + digest,
                             headers={
                                 "Authorization": "Bearer " + token,
                                 "Accept": "application/vnd.oci.image.manifest.v1+json"
@@ -363,7 +365,7 @@ response = requests.get("https://registry-1.docker.io/v2/library/" + image + "/m
     for i in range(len(blobs)):
         print("\033[33mpulling: \033[32m" + blobs[i][7:] + "\033[0m")
         os.system("curl -s -L -H \"Authorization: Bearer " + token + "\"" +
-                  " https://registry-1.docker.io/v2/library/" + image + "/blobs/" + blobs[i] + " -o " + savedir +
+                  " https://registry-1.docker.io/v2/" + image + "/blobs/" + blobs[i] + " -o " + savedir +
                   "/" + "rootfs_" + blobs[i][7:])
     os.system("cd " + savedir + " && sudo tar -xvf ./* && rm rootfs_*")
 ```
@@ -371,7 +373,7 @@ response = requests.get("https://registry-1.docker.io/v2/library/" + image + "/m
 ```python
 def get_cmd(image, digest, token):
     print("")
-    response = requests.get("https://registry-1.docker.io/v2/library/" + image + "/manifests/" + digest,
+    response = requests.get("https://registry-1.docker.io/v2/" + image + "/manifests/" + digest,
                             headers={
                                 "Authorization": "Bearer " + token,
                                 "Accept": "application/vnd.oci.image.manifest.v1+json"
@@ -380,7 +382,7 @@ def get_cmd(image, digest, token):
         panic("Get config failed!")
     manifests = json.loads(response.text)
     config = manifests['config']['digest']
-    response = requests.get("https://registry-1.docker.io/v2/library/" + image + "/blobs/" + config,
+    response = requests.get("https://registry-1.docker.io/v2/" + image + "/blobs/" + config,
                             headers={
                                 "Authorization": "Bearer " + token,
                                 "Accept": "application/vnd.oci.image.manifest.v1+json"
