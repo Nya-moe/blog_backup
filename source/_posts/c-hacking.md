@@ -50,7 +50,7 @@ if ((container->cross_arch == NULL) != (container->qemu_path == NULL)) {
 ```
 不过如果你想要最简写法：
 ```C
-if ((!!container->cross_arch) ^ (!!container->qemu_path)) {
+if ((!!(container->cross_arch)) ^ (!!(container->qemu_path))) {
 		error("{red}Error: --arch and --qemu-path should be set at the same time QwQ\n");
 }
 ```
