@@ -26,7 +26,9 @@ for(int i=strlen(str);i-->0;i=i){
 C语言提供方便的指针解引用，于是：
 ```C
 if (strchr(p, ';') == NULL) {
-		*strchr(p, '\n') = '\0';
+		if(strchr(p, '\n')!=NULL) {
+			*strchr(p, '\n') = '\0';
+		}
 	} else {
 		*strchr(p, ';') = '\0';
 }
@@ -63,7 +65,7 @@ else if (strcmp(argv[i], "lxc") == 0) {
 			}
 			lxc(argc - i - 1, &argv[i + 1]);
 			return 0;
-} 
+}
 ```
 # 三级指针控制数组：
 在函数外面：
