@@ -34,9 +34,21 @@ if (strchr(p, ';') == NULL) {
 由于strchr()返回的是在原字符串指针中的地址，因此只要p是可写的，就可以直接赋值strchr指向的位置。
 编译器同意，编写者同意，而且能跑，皆大欢喜。
 # 位运算达到同时成立/不成立：
-使用p^q可以判断p和q是否同时成立或不成立，ruri中`-a`和`-q`需要同时设置，判断是这么写的：
+使用p^q可以判断p和q是否同时成立或不成立，ruri中`-a`和`-q`需要同时设置，曾经判断是这么写的：
 ```C
 if ((container->cross_arch == NULL) ^ (container->qemu_path == NULL)) {
+		error("{red}Error: --arch and --qemu-path should be set at the same time QwQ\n");
+}
+```
+事实上，更规范的写法是直接用!=判断两个表达式是否相等：
+```C
+if ((container->cross_arch == NULL) != (container->qemu_path == NULL)) {
+		error("{red}Error: --arch and --qemu-path should be set at the same time QwQ\n");
+}
+```
+不过如果你想要最简写法：
+```C
+if ((!!container->cross_arch) ^ (!!container->qemu_path)) {
 		error("{red}Error: --arch and --qemu-path should be set at the same time QwQ\n");
 }
 ```
