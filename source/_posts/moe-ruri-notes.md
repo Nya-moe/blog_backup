@@ -202,8 +202,14 @@ pivot_root()类似于chroot(),但更加安全，它的原理是更改当前mount
 ruri v3.7正式为unshare容器启用pivot_root替代chroot。      
 他的使用方式如下：
 首先我们需要一个mount ns，可以`unshare(CLONE_NEWNS)`后fork()一下自己。
+其次，pivot_root()的new_root以及其父挂载点需要是MS_PRIVATE属性。
+最后，new_root需要是一个挂载点。
 在mount ns的所有者进程中，可以这样使用pivot_root:
 ```C
+// 将根目录挂载为MS_PRIVATE
+mount("none", "/", NULL, MS_REC | MS_PRIVATE, NULL);
+// 挂载容器目录自身
+mount(container_dir, container_dir, NULL, MS_BIND | MS_PRIVATE, NULL);
 // 切换到容器目录
 chdir(container_dir);
 // 运行pivot_root
@@ -213,7 +219,6 @@ chdir("/");
 // 取消原root的挂载
 umount2(".",MNT_DETACH);
 ```
-
 在非ns所有者进程中，我们可以通过setns(2)加入已经运行过pivot_root的mount namespace, 然后直接`chdir("/")`即可。
 ## Rootless容器：
 建议配合咱的另一篇文章阅读：[rootless容器开发指北](https://blog.crack.moe/2024/10/31/rootless-container/)      
