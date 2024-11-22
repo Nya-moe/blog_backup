@@ -96,6 +96,8 @@ try_unshare(CLONE_NEWNS);
 try_unshare(CLONE_NEWPID);
 ```
 记得fork()一次以让子进程加入创建的ns。
+在这里，你也可以unshare来创建其他命名空间，如cgroup，ipc等。
+注意，创建命名空间后fork()一次，这里得到的pid就是我们的ns_pid了。      
 ## 3.挂载目录：
 sysfs从需要从宿主机挂载，由于我们无权mknod，/dev下设备需要从宿主机映射过去。
 ```C
@@ -215,6 +217,9 @@ static void drop_caps(const struct CONTAINER *_Nonnull container)
 execvp(container->command[0], container->command);
 ```
 于是我们完成了rootless容器的创建和运行。
+# 统一ns：
+在容器完成创建后，我们想要运行新的命令怎么办？
+非常简单，setns()加入ns_pid的user ns，这时候uid和gid map已经设置好了无需再次设置，然后依次加入其他ns即可。 
 # 问题修复：
 在解压rootfs时如果遇到权限问题，可以使用`proot -0 tar -xxxxx`来解压。
 如果在容器中遇到`Couldn't create temporary file /tmp/apt.conf.sIKx3J for passing config to apt-key`这样的错误，请`chmod 777 /tmp`
